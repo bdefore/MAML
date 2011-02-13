@@ -19,97 +19,97 @@ MAML is MXML in the spirit of YAML.
 	Rebuild my dinosaur every time I save my MAML:
 	ruby rstakeout.rb "ruby maml.rb test.maml Bethany.mxml" test.maml
 
-	An example MXML:
-	
-	<s:Application
-		xmlns:fx="http://ns.adobe.com/mxml/2009" 
-		xmlns:mx="library://ns.adobe.com/flex/mx"
-		xmlns:s="library://ns.adobe.com/flex/spark"
-		creationComplete="onCreationComplete()"
+An example MXML:
+
+<s:Application
+	xmlns:fx="http://ns.adobe.com/mxml/2009" 
+	xmlns:mx="library://ns.adobe.com/flex/mx"
+	xmlns:s="library://ns.adobe.com/flex/spark"
+	creationComplete="onCreationComplete()"
+	>
+
+	<s:SkinnableContainer width="100%" height="100%"
+
+
 		>
 
-		<s:SkinnableContainer width="100%" height="100%"
 
 
-			>
+		<s:VGroup
+			width="100%"
+				height="100%">
+			<s:HGroup width="100%" height="50">
+				<s:Label text="Fwee">
+				</s:Label>
+				<s:Label text="Fwei" />
+				<s:Label text="Fwo"/>
+				<s:Label text="Fwum"/>
+			</s:HGroup>
+			<mx:DataGrid id="dg" dataProvider="{arrayCollectionToBind}" width="100%" height="100%" change="onChange(event)"/>
+		</s:VGroup          >
+	</s:SkinnableContainer>
 
+</s:Application>	
 
+Would convert to MAML:
 
-			<s:VGroup
-				width="100%"
-					height="100%">
-				<s:HGroup width="100%" height="50">
-					<s:Label text="Fwee">
-					</s:Label>
-					<s:Label text="Fwei" />
-					<s:Label text="Fwo"/>
-					<s:Label text="Fwum"/>
-				</s:HGroup>
-				<mx:DataGrid id="dg" dataProvider="{arrayCollectionToBind}" width="100%" height="100%" change="onChange(event)"/>
-			</s:VGroup          >
-		</s:SkinnableContainer>
+s:Application
+xmlns:fx         = http://ns.adobe.com/mxml/2009
+xmlns:mx         = library://ns.adobe.com/flex/mx
+xmlns:s          = library://ns.adobe.com/flex/spark
+creationComplete = onCreationComplete()
 
-	</s:Application>	
+    s:SkinnableContainer
+    width  = 100%
+    height = 100%
 
-	Would convert to MAML:
-	
-	s:Application
-	xmlns:fx         = http://ns.adobe.com/mxml/2009
-	xmlns:mx         = library://ns.adobe.com/flex/mx
-	xmlns:s          = library://ns.adobe.com/flex/spark
-	creationComplete = onCreationComplete()
+        s:VGroup
+        width  = 100%
+        height = 100%
 
-	    s:SkinnableContainer
-	    width  = 100%
-	    height = 100%
+            s:HGroup
+            width  = 100%
+            height = 50
 
-	        s:VGroup
-	        width  = 100%
-	        height = 100%
+                s:Label
+                text = Fwee
 
-	            s:HGroup
-	            width  = 100%
-	            height = 50
+                s:Label
+                text = Fwei
 
-	                s:Label
-	                text = Fwee
+                s:Label
+                text = Fwo
 
-	                s:Label
-	                text = Fwei
+                s:Label
+                text = Fwum
 
-	                s:Label
-	                text = Fwo
+            mx:DataGrid
+            id           = dg
+            dataProvider = {arrayCollectionToBind}
+            width        = 100%
+            height       = 100%
+            change       = onChange(event)
 
-	                s:Label
-	                text = Fwum
+And back again to MXML:
 
-	            mx:DataGrid
-	            id           = dg
-	            dataProvider = {arrayCollectionToBind}
-	            width        = 100%
-	            height       = 100%
-	            change       = onChange(event)
-
-	And back again to MXML:
-
-	<s:Application xmlns:fx="http://ns.adobe.com/mxml/2009" xmlns:mx="library://ns.adobe.com/flex/mx" xmlns:s="library://ns.adobe.com/flex/spark" creationComplete="onCreationComplete()">
-	    <s:SkinnableContainer width="100%" height="100%">
-	        <s:VGroup width="100%" height="100%">
-	            <s:HGroup width="100%" height="50">
-	                <s:Label text="Fwee">
-	                </s:Label>
-	                <s:Label text="Fwei">
-	                </s:Label>
-	                <s:Label text="Fwo">
-	                </s:Label>
-	                <s:Label text="Fwum">
-	                </s:Label>
-	            </s:HGroup>
-	            <mx:DataGrid id="dg" dataProvider="{arrayCollectionToBind}" width="100%" height="100%" change="onChange(event)">
-	            </mx:DataGrid>
-	        </s:VGroup>
-	    </s:SkinnableContainer>
-	</s:Application>
+<s:Application xmlns:fx="http://ns.adobe.com/mxml/2009" xmlns:mx="library://ns.adobe.com/flex/mx" xmlns:s="library://ns.adobe.com/flex/spark" creationComplete="onCreationComplete()">
+    <s:SkinnableContainer width="100%" height="100%">
+        <s:VGroup width="100%" height="100%">
+            <s:HGroup width="100%" height="50">
+                <s:Label text="Fwee">
+                </s:Label>
+                <s:Label text="Fwei">
+                </s:Label>
+                <s:Label text="Fwo">
+                </s:Label>
+                <s:Label text="Fwum">
+                </s:Label>
+            </s:HGroup>
+            <mx:DataGrid id="dg" dataProvider="{arrayCollectionToBind}" width="100%" height="100%" change="onChange(event)">
+            </mx:DataGrid>
+        </s:VGroup>
+    </s:SkinnableContainer>
+</s:Application>
 
 ## Known Issues
 
