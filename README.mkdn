@@ -19,15 +19,111 @@ MAML is MXML in the spirit of YAML.
 	Rebuild my dinosaur every time I save my MAML:
 	ruby rstakeout.rb "ruby maml.rb test.maml Bethany.mxml" test.maml
 
+	An example MXML:
+	
+	<s:Application
+		xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		xmlns:mx="library://ns.adobe.com/flex/mx"
+		xmlns:s="library://ns.adobe.com/flex/spark"
+		creationComplete="onCreationComplete()"
+		>
+
+		<s:SkinnableContainer width="100%" height="100%"
+
+
+			>
+
+
+
+			<s:VGroup
+				width="100%"
+					height="100%">
+				<s:HGroup width="100%" height="50">
+					<s:Label text="Fwee">
+					</s:Label>
+					<s:Label text="Fwei" />
+					<s:Label text="Fwo"/>
+					<s:Label text="Fwum"/>
+				</s:HGroup>
+				<mx:DataGrid id="dg" dataProvider="{arrayCollectionToBind}" width="100%" height="100%" change="onChange(event)"/>
+			</s:VGroup          >
+		</s:SkinnableContainer>
+
+	</s:Application>	
+
+	Would convert to MAML:
+	
+	s:Application
+	xmlns:fx         = http://ns.adobe.com/mxml/2009
+	xmlns:mx         = library://ns.adobe.com/flex/mx
+	xmlns:s          = library://ns.adobe.com/flex/spark
+	creationComplete = onCreationComplete()
+
+	    s:SkinnableContainer
+	    width  = 100%
+	    height = 100%
+
+	        s:VGroup
+	        width  = 100%
+	        height = 100%
+
+	            s:HGroup
+	            width  = 100%
+	            height = 50
+
+	                s:Label
+	                text = Fwee
+
+	                s:Label
+	                text = Fwei
+
+	                s:Label
+	                text = Fwo
+
+	                s:Label
+	                text = Fwum
+
+	            mx:DataGrid
+	            id           = dg
+	            dataProvider = {arrayCollectionToBind}
+	            width        = 100%
+	            height       = 100%
+	            change       = onChange(event)
+
+	And back again to MXML:
+
+	<s:Application xmlns:fx="http://ns.adobe.com/mxml/2009" xmlns:mx="library://ns.adobe.com/flex/mx" xmlns:s="library://ns.adobe.com/flex/spark" creationComplete="onCreationComplete()">
+	    <s:SkinnableContainer width="100%" height="100%">
+	        <s:VGroup width="100%" height="100%">
+	            <s:HGroup width="100%" height="50">
+	                <s:Label text="Fwee">
+	                </s:Label>
+	                <s:Label text="Fwei">
+	                </s:Label>
+	                <s:Label text="Fwo">
+	                </s:Label>
+	                <s:Label text="Fwum">
+	                </s:Label>
+	            </s:HGroup>
+	            <mx:DataGrid id="dg" dataProvider="{arrayCollectionToBind}" width="100%" height="100%" change="onChange(event)">
+	            </mx:DataGrid>
+	        </s:VGroup>
+	    </s:SkinnableContainer>
+	</s:Application>
+
 ## Known Issues
 
 * All comments are stripped
+* Tabs become spaces
+* Self-closing tags get expanded
 * A single <fx:Script> tag is preserved during the conversion.
 * If you toss in a non-existent dinosaur, you set the MAML on fire
 
 ## Future Ideas
 
 * Make tests for it
+* Make more YAML-like MXML export
+* Self-close nodes that can in MAML -> MXML step
 * Preserve comments in a pleasant format
 * Formatting for ActionScript within Script tags
 * Remove need for namespacing, generate a massively polluted MXML opening tag that contains all possible namespace enumerations, including any directory in the source path, and prepend these generated namespaces to the classes they would affect. This would probably not be appreciated by parallel developers.
