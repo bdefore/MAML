@@ -28,6 +28,22 @@
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+require 'optparse'
+require 'ostruct'
+require 'fileutils.rb'
+
+options = OpenStruct.new(:verbose => false)
+
+OptionParser.new do |opts|
+  opts.banner = "Usage: maml.rb [options] <command> <filespec>+"
+  opts.on("-v", "--verbose") do |v|
+    options.verbose = v
+  end
+end.parse!
+
+input_path = ARGV[0]
+output_path = ARGV[1]
+
 def to_maml(input_path, output_path)
   
   result = ""
@@ -41,7 +57,7 @@ def to_maml(input_path, output_path)
   declarations = slice_node(result, "<?", "?>")
   # Strip comments
   comments = slice_all_nodes(result, "<!--", "-->")
-  puts "WARNING: Stripped " + String(comments.length) + " comments."
+  puts "WARNING: Stripped " + String(comments.length) + " comments from " + input_path
   
   # Remove all whitespace outside of tags and between attributes, outside of CDATA
 
@@ -337,12 +353,20 @@ def write_to_file(output, output_path)
     puts "== No output_path specified, printing to std_out complete"
     puts "=========================================================="
   else
-    File.open(output_path, "w") do |file|
-      file.puts output
-    end
-    puts "Written successfully to " + output_path
-  end
 
+    dirname = File.dirname(output_path)
+    if !File.exist?(dirname)
+      puts "Creating directory: " + dirname
+      FileUtils.mkpath dirname
+    end
+
+    if !File.directory?(output_path)
+      f = File.open(output_path, "w")
+      f.puts output
+      puts "Written successfully to " + output_path
+    else
+    end
+  end
 end
 
 class MxmlNode
@@ -367,24 +391,46 @@ class MxmlNodeAttribute
   attr_writer :lvalue, :value
 end
 
-input_path = ARGV[0]
-output_path = ARGV[1]
+def build_mtimes_hash(globs)
+  files = {}
+  globs.each { |g|
+    Dir[g].each do |file|
+      if !File.directory?(file)
+        files[file] = File.mtime(file)
+      end
+    end
+  }
+  files
+end
+
+def convert(input_path, output_path)
+  if input_path.upcase.index(/MXML/)
+    to_maml input_path, "maml_export/" + output_path.gsub(".MXML", ".maml")
+  elsif input_path.upcase.index(/MAML/)
+    to_mxml input_path, "mxml_export/" + output_path.gsub(".MXML", ".mxml")
+  end
+end
 
 if !input_path
   puts "================================================="
   puts "== maml.rb version ASYMPTOTIC TO ZERO"
   puts "================================================="
   puts "== Please specify a path to an MXML or MAML file,"
-  puts "== and an optionally a path to output to."
+  puts "== and optionally a path to output to."
   puts "================================================="
 
 else
-  if input_path.upcase.index(/MXML/)
-    to_maml input_path, output_path
-
-  elsif input_path.upcase.index(/MAML/)
-    to_mxml input_path, output_path
-  
+  files = build_mtimes_hash(ARGV)
+  if files
+    if options.verbose 
+      puts "Building #{files.keys.join(', ')}\n\nFiles: #{files.keys.length}"
+    end
+    files.each do |file|
+      # only pass in file names to convert, not dirs
+      if !File.directory?(input_path)
+        convert(file[0], file[0])
+      end
+    end
   else
     puts "================================================="
     puts "== maml.rb version ASYMPTOTIC TO ZERO"
