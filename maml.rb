@@ -33,7 +33,7 @@ require 'ostruct'
 require 'fileutils.rb'
 require 'rstakeout.rb'
 
-$options = OpenStruct.new(:verbose => false, :output_path => "maml_generated", :watch_mode => false, :sleep_time => 1, :synchronous => false)
+$options = OpenStruct.new(:verbose => false, :output_path => "maml_generated", :watch_mode => false, :sleep_time => 1, :synchronous => false, :indent_size => 4)
 
 OptionParser.new do |opts|
   opts.banner = "Usage: maml.rb [options] <command> <filespec>+"
@@ -47,6 +47,9 @@ OptionParser.new do |opts|
     $options.watch_mode = w
   end
   opts.on("-t", "--sleep-time T", Integer, "time to sleep after each loop iteration") do |t|
+    $options.sleep_time = t
+  end
+  opts.on("--indent-size T", Integer, "How many spaces to indent per nested level") do |t|
     $options.sleep_time = t
   end
   if($options.verbose)
@@ -68,7 +71,7 @@ def to_maml(input_path, output_path)
   # Strip comments
   comments = slice_all_nodes(result, "<!--", "-->")
   if(comments.length > 0)
-    puts "WARNING: Stripped " + String(comments.length) + " comments from " + input_path
+    puts "WARNING: Stripped " + String(comments.length) + " comment(s) from " + input_path
   end
   
   # Remove all whitespace outside of tags and between attributes, outside of CDATA
@@ -83,7 +86,7 @@ def to_maml(input_path, output_path)
 
   # Persist an indentation value, ++ every time a closing tag is found, -- when the tag that initiated the increment is closed.
   indents = 0
-  indentationAmount = 4
+  indentationAmount = $options.indent_size
   nestedResult = ""
   result = result[1..result.length]
   result = result.split(/\>\</)
