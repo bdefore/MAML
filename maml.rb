@@ -31,8 +31,9 @@
 require 'optparse'
 require 'ostruct'
 require 'fileutils.rb'
+require 'rstakeout.rb'
 
-$options = OpenStruct.new(:verbose => false, :output_path => "maml_generated/")
+$options = OpenStruct.new(:verbose => false, :output_path => "maml_generated/", :watch_mode => false, :sleep_time => 1, :synchronous => false)
 
 OptionParser.new do |opts|
   opts.banner = "Usage: maml.rb [options] <command> <filespec>+"
@@ -42,10 +43,16 @@ OptionParser.new do |opts|
   opts.on("-o", "--output_path") do |o|
     $options.output_path = o
   end
+  opts.on("-w", "--watch-mode") do |w|
+    $options.watch_mode = w
+  end
+  opts.on("-t", "--sleep-time T", Integer, "time to sleep after each loop iteration") do |t|
+    $options.sleep_time = t
+  end
+  if($options.verbose)
+    puts $options
+  end
 end.parse!
-
-input_path = ARGV[0]
-output_path = ARGV[1]
 
 def to_maml(input_path, output_path)
   
@@ -368,12 +375,12 @@ def write_to_file(output, output_path)
     end
 
     if !File.directory?(output_path)
-      f = File.open(output_path, "w")
+      f = File.new(output_path, "w")
       f.puts output
+      f.close
       if $options.verbose
         puts "Written successfully to " + output_path
       end
-    else
     end
   end
 end
@@ -400,26 +407,23 @@ class MxmlNodeAttribute
   attr_writer :lvalue, :value
 end
 
-def build_mtimes_hash(globs)
+def convert(input_path)
+  if input_path.upcase.index(/MXML/)
+    to_maml input_path, $options.output_path + "maml/" + input_path.gsub(".mxml", ".maml")
+  elsif input_path.upcase.index(/MAML/)
+    to_mxml input_path, $options.output_path + "mxml/" + input_path.gsub(".maml", ".mxml")
+  end
+end
+
+def build_mtimes_hash(file_paths)
   files = {}
-  globs.each { |g|
-    Dir[g].each do |file|
-      if !File.directory?(file)
-        files[file] = File.mtime(file)
-      end
-    end
+  file_paths.each { |file_path|
+    Dir[file_path].each { |file| files[file] = File.mtime(file) }
   }
   files
 end
 
-def convert(input_path, output_path)
-  if input_path.upcase.index(/MXML/)
-    to_maml input_path, $options.output_path + "maml/" + output_path.gsub(".mxml", ".maml")
-  elsif input_path.upcase.index(/MAML/)
-    to_mxml input_path, $options.output_path + "mxml/" + output_path.gsub(".maml", ".mxml")
-  end
-end
-
+input_path = ARGV[0];
 if !input_path
   puts "================================================="
   puts "== maml.rb version ASYMPTOTIC TO ZERO"
@@ -427,24 +431,35 @@ if !input_path
   puts "== Please specify a path to an MXML or MAML file,"
   puts "== and optionally a path to output to."
   puts "================================================="
-
+elsif(File.directory?(input_path))
+  file_paths = Dir[input_path + "/**/*.mxml"]
+  file_paths += Dir[input_path + "/**/*.maml"]
 else
-  files = build_mtimes_hash(ARGV)
-  if files
-    if $options.verbose 
-      puts "Building #{files.keys.join(', ')}\n\nFiles: #{files.keys.length}"
-    end
-    files.each do |file|
-      # only pass in file names to convert, not dirs
-      if !File.directory?(input_path)
-        convert(file[0], file[0])
-      end
-    end
-  else
-    puts "================================================="
-    puts "== maml.rb version ASYMPTOTIC TO ZERO"
-    puts "================================================="
-    puts "== Expecting a mxml or maml file"
-    puts "================================================="
+  file_paths = [ input_path ]
+end
+
+files = build_mtimes_hash(file_paths)
+
+if files
+  if $options.verbose 
+    puts "Building #{files.keys.join(', ')}\n\nTOTAL FILES: #{files.keys.length}\n\n"
   end
+  fileArgString = ""
+  files.each do |file|
+    # only pass in file names to convert, not dirs
+    if !File.directory?(file[0])
+      convert(file[0])
+      fileArgString += file[0] + " "
+    end
+  end
+  if $options.watch_mode
+    stakeout_command = "ruby maml.rb " + fileArgString
+    watch(stakeout_command, files, $options)
+  end
+else
+  puts "================================================="
+  puts "== maml.rb version ASYMPTOTIC TO ZERO"
+  puts "================================================="
+  puts "== Expecting a mxml or maml file"
+  puts "================================================="
 end

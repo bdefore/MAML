@@ -25,6 +25,9 @@
 # See the PeepCode screencast on rSpec or other blog articles for instructions on
 # setting up growlnotify.
 #
+# * Detect multiple changed files on one pass
+# * Wrapped main functionality into a watch def, for interoperability
+# * Updated to support Ruby v1.9.1 
 # * Added Snarl support in win32, initial implementation by Francis Fish
 # * Added synchronous mode
 # * Allow adjusting of sleep time
@@ -47,7 +50,7 @@ end
 FAIL_ICON_PATH = File.join(File.dirname(__FILE__), 'failure.png')
 OK_ICON_PATH = File.join(File.dirname(__FILE__), 'success.png')
 
-case PLATFORM
+case RUBY_PLATFORM
 when /darwin/
   require_gem 'ruby-growl'
 when /win32/
@@ -65,11 +68,11 @@ module GrowlNotifier
     private :notify
 
     def notify_fail(output)
-      notify "Test/Spec FAIL", "#{output}", FAIL_ICON_PATH, 2
+      notify "MAML conversion failure", "#{output}", FAIL_ICON_PATH, 2
     end
 
     def notify_pass(output)
-      notify "Test/Spec pass", "#{output}", OK_ICON_PATH
+      notify "MAML conversion success", "#{output}", OK_ICON_PATH
     end
   end
 end
@@ -112,15 +115,15 @@ module EmptyNotifier
   end
 end
 
-Notifier = case PLATFORM
-  when /linux/: EmptyNotifier
-  when /win32/: SnarlNotifier
+Notifier = case RUBY_PLATFORM
+  when /linux/; EmptyNotifier
+  when /win32/; SnarlNotifier
   else
     GrowlNotifier
   end
 
 module ParseSpecResult
- def self.notify_test_unit_results(results)
+  def self.notify_test_unit_results(results)
     output = results.slice(/(\d+)\s+tests?,\s*(\d+)\s+assertions?,\s*(\d+)\s+failures?(,\s*(\d+)\s+errors)?/)
     if output
       $~[3].to_i + $~[5].to_i > 0 ? Notifier.notify_fail(output) : Notifier.notify_pass(output)
@@ -143,70 +146,87 @@ def build_mtimes_hash(globs)
   files
 end
 
-trap('INT') do
-  puts "\nQuitting..."
-  exit
-end
-
-options = OpenStruct.new(:sleep_time => 1, :reload_glob => false, :synchronous => false)
-
-OptionParser.new do |opts|
-  opts.banner = "Usage: rstakeout.rb [options] <command> <filespec>+"
-  opts.on("-t", "--sleep-time T", Integer, "time to sleep after each loop iteration") do |t|
-    options.sleep_time = t
-  end
-  opts.on("-v", "--verbose") do |v|
-    options.verbose = v
-  end
-  opts.on("--sync", "force synchronous mode (disallow simultaneous runs)") do |s|
-    options.synchronous = s
-  end
-end.parse!
-
-MYTEMP = ENV['TEMP'] || '/tmp'
-
-command = ARGV.shift
-files = build_mtimes_hash(ARGV)
-LOCKFILE = File.join(MYTEMP, 'rstakeout.lock')
-if options.synchronous
-  lock_obj = File.new(LOCKFILE, 'w')
-end
-
-if options.verbose
-  p options
-  puts "Watching #{files.keys.join(', ')}\n\nFiles: #{files.keys.length}"
-end
-
 def with_exclusive_lock_if_synchronous(run_synced, lockfile, &block)
   lockfile.flock(File::LOCK_EX) if run_synced
   block.call
   lockfile.flock(File::LOCK_UN) if run_synced
 end
 
-loop do
-  changed_file, last_changed = files.find { |file, last_changed|
-    begin
-      File.mtime(file) > last_changed
-    rescue Errno::ENOENT => e # file may have been moved, deleted etc. while running rstakeout
-      warn e
-    end
-  }
+def watch(command, files, options)
 
-  if changed_file
-    with_exclusive_lock_if_synchronous(options.synchronous, lock_obj) do
-      files[changed_file] = File.mtime(changed_file)
-      puts "=> #{changed_file} changed, running '#{command}'"
-      results = `#{command}`
-      puts results
+  $options = options
 
-      if results.include? 'tests'
-        ParseSpecResult.notify_test_unit_results(results)
-      else
-        ParseSpecResult.notify_rspec_results(results)
-      end
-      # TODO Generic snarl/growl notification for other actions
-      puts "=> done"
-    end
+  my_temp = ENV['TEMP'] || '/tmp'
+
+  lockfile = File.join(my_temp, 'rstakeout.lock')
+  if options.synchronous
+    lock_obj = File.new(lockfile, 'w')
   end
-  sleep options.sleep_time
+
+  loop do
+    changed_files = []
+    files.each do |file, last_changed|
+      begin
+        if File.mtime(file) > last_changed
+          changed_files.push(file)
+        end
+      rescue Errno::ENOENT => e # file may have been moved, deleted etc. while running rstakeout
+        warn e
+      end
+    end
+
+    changed_files.each do |changed_file|
+      with_exclusive_lock_if_synchronous(options.synchronous, lock_obj) do
+        files[changed_file] = File.mtime(changed_file)
+        puts "=> #{changed_file} changed"
+        convert(changed_file)
+      end
+    end
+
+    if(changed_files.length > 0)
+      message = changed_files.join(", ")
+      Notifier.notify_pass(message)
+    else
+      puts "No changes detected. Checking again in " + String($options.sleep_time) + " seconds..."
+    end
+
+    sleep options.sleep_time
+  end  
 end
+
+trap('INT') do
+  puts "\nQuitting..."
+  exit
+end
+
+# MAML requires the following to be commented out because this is not a 
+# formal module and its require call breaks things in maml.rb
+#
+# Would love to encapsulate this better
+#
+# Uncomment out the following to use rstakeout.rb directly
+
+# options = OpenStruct.new(:sleep_time => 1, :reload_glob => false, :synchronous => false)
+# 
+# OptionParser.new do |opts|
+#   opts.banner = "Usage: rstakeout.rb [options] <command> <filespec>+"
+#   opts.on("-t", "--sleep-time T", Integer, "time to sleep after each loop iteration") do |t|
+#     options.sleep_time = t
+#   end
+#   opts.on("-v", "--verbose") do |v|
+#     options.verbose = v
+#   end
+#   opts.on("--sync", "force synchronous mode (disallow simultaneous runs)") do |s|
+#     options.synchronous = s
+#   end
+# end.parse!
+# 
+# command = ARGV.shift
+# files = build_mtimes_hash(ARGV)
+# 
+# if options.verbose
+#   p options
+#   puts "Watching #{files.keys.join(', ')}\n\nFiles: #{files.keys.length}"
+# end
+# 
+# watch(command, files, options)
