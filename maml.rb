@@ -141,7 +141,7 @@ def to_maml(input_path, output_path)
       # - Outdent attribute values to the position just right of the longest named attribute
       attrHalves = attr.split(" = ");
       attrName = attrHalves[0]
-      attrValue = attrHalves[1]
+      attrValue = attrHalves[1] || ""
       toPad = largestAttrNameLength - attrName.length - 2
       paddedAttr = attrName.ljust(attrName.length + toPad) + " = " + attrValue;
       indentedAttr = paddedAttr.rjust(paddedAttr.length + (indents*indentationAmount))
