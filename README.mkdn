@@ -27,10 +27,20 @@ MAML is MXML in the spirit of YAML.
 
 	Command line switches:
 	
-	* -o, --output-path PATH : Specify where you want generated files to go. Subdirectories named 'maml' and 'mxml' will be created within this directory, and from there a directory structure will match that of the source files. Default is 'maml_generated'.
-	* -w, --watch-mode : Will check for when a file or the files within a directory specified in the input path have changed and trigger conversions automatically to the output path.
-	* -t, --sleep-time SECONDS : The inteval at which watch mode will check for changed files. Default is 1.
-	* -v, --verbose : Chattier messages.
+	-o, --output-path PATH
+	Specify where you want generated files to go. Subdirectories named 'maml' and 'mxml' will be created
+	within this directory, and from there a directory structure will match that of the source files. Default
+	is 'maml_generated'.
+	
+	-w, --watch-mode
+	Will check for when a file or the files within a directory specified in the input path have changed and
+	trigger conversions automatically to the output path.
+	
+	-t, --sleep-time SECONDS
+	The interval at which watch mode will check for changed files. Default is 1.
+	
+	-v, --verbose
+	Chattier messages.
 
 ## Example
 
