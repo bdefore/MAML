@@ -32,12 +32,15 @@ require 'optparse'
 require 'ostruct'
 require 'fileutils.rb'
 
-$options = OpenStruct.new(:verbose => false)
+$options = OpenStruct.new(:verbose => false, :output_path => "maml_generated/")
 
 OptionParser.new do |opts|
   opts.banner = "Usage: maml.rb [options] <command> <filespec>+"
   opts.on("-v", "--verbose") do |v|
     $options.verbose = v
+  end
+  opts.on("-o", "--output_path") do |o|
+    $options.output_path = o
   end
 end.parse!
 
@@ -57,7 +60,9 @@ def to_maml(input_path, output_path)
   declarations = slice_node(result, "<?", "?>")
   # Strip comments
   comments = slice_all_nodes(result, "<!--", "-->")
-  puts "WARNING: Stripped " + String(comments.length) + " comments from " + input_path
+  if(comments.length > 0)
+    puts "WARNING: Stripped " + String(comments.length) + " comments from " + input_path
+  end
   
   # Remove all whitespace outside of tags and between attributes, outside of CDATA
 
@@ -409,9 +414,9 @@ end
 
 def convert(input_path, output_path)
   if input_path.upcase.index(/MXML/)
-    to_maml input_path, "maml_export/" + output_path.gsub(".MXML", ".maml")
+    to_maml input_path, $options.output_path + "maml/" + output_path.gsub(".mxml", ".maml")
   elsif input_path.upcase.index(/MAML/)
-    to_mxml input_path, "mxml_export/" + output_path.gsub(".MXML", ".mxml")
+    to_mxml input_path, $options.output_path + "mxml/" + output_path.gsub(".maml", ".mxml")
   end
 end
 
