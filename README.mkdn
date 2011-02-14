@@ -6,7 +6,7 @@ MAML is MXML in the spirit of YAML.
 
 * [Ruby](http://www.ruby-lang.org/)
     
-## Example Usage
+## Usage
     
 **WARNING** Use at your own discretion, this is experimental hobby code and should not be relied on for building rockets to space. Check in your code before you mess with this.
 
@@ -17,7 +17,15 @@ MAML is MXML in the spirit of YAML.
 	ruby maml.rb test.maml Bethany.mxml
 	
 	Rebuild my dinosaur every time I save my MAML:
-	ruby rstakeout.rb "ruby maml.rb test.maml Bethany.mxml" test.maml
+	ruby maml.rb -w test.maml
+
+	Rebuild my dinosaur into a directory named Gondwanaland on my Desktop:
+	ruby maml.rb -w -o ~/Desktop/Gondwanaland test.maml
+
+	Rebuild a dinosaur any time I save a MAML in a specified directory with spaces, recursively:
+	ruby maml.rb -w ~/Documents/Flex\ Builder\ 3/My\ Flex\ Project/src
+
+## Example
 
 An example MXML:
 
