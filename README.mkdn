@@ -11,10 +11,10 @@ MAML is MXML in the spirit of YAML.
 **WARNING** Use at your own discretion, this is experimental hobby code and should not be relied on for building rockets to space. Check in your code before you mess with this.
 
 	From MXML, generate a creature that nurses its young from teats:
-	ruby maml.rb test.mxml test.maml
+	ruby maml.rb test.mxml
 
-	From MAML, generate a dinosaur named Bethany:
-	ruby maml.rb test.maml Bethany.mxml
+	From MAML, generate a dinosaur:
+	ruby maml.rb test.maml
 	
 	Rebuild my dinosaur every time I save my MAML:
 	ruby maml.rb -w test.maml
@@ -24,6 +24,13 @@ MAML is MXML in the spirit of YAML.
 
 	Rebuild a dinosaur any time I save a MAML in a specified directory with spaces, recursively:
 	ruby maml.rb -w ~/Documents/Flex\ Builder\ 3/My\ Flex\ Project/src
+
+	Command line switches:
+	
+	* -o, --output-path PATH : Specify where you want generated files to go. Subdirectories named 'maml' and 'mxml' will be created within this directory, and from there a directory structure will match that of the source files. Default is 'maml_generated'.
+	* -w, --watch-mode : Will check for when a file or the files within a directory specified in the input path have changed and trigger conversions automatically to the output path.
+	* -t, --sleep-time SECONDS : The inteval at which watch mode will check for changed files. Default is 1.
+	* -v, --verbose : Chattier messages.
 
 ## Example
 
