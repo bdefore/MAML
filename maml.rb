@@ -32,12 +32,12 @@ require 'optparse'
 require 'ostruct'
 require 'fileutils.rb'
 
-options = OpenStruct.new(:verbose => false)
+$options = OpenStruct.new(:verbose => false)
 
 OptionParser.new do |opts|
   opts.banner = "Usage: maml.rb [options] <command> <filespec>+"
   opts.on("-v", "--verbose") do |v|
-    options.verbose = v
+    $options.verbose = v
   end
 end.parse!
 
@@ -356,14 +356,18 @@ def write_to_file(output, output_path)
 
     dirname = File.dirname(output_path)
     if !File.exist?(dirname)
-      puts "Creating directory: " + dirname
+      if $options.verbose
+        puts "Creating directory: " + dirname
+      end
       FileUtils.mkpath dirname
     end
 
     if !File.directory?(output_path)
       f = File.open(output_path, "w")
       f.puts output
-      puts "Written successfully to " + output_path
+      if $options.verbose
+        puts "Written successfully to " + output_path
+      end
     else
     end
   end
@@ -422,7 +426,7 @@ if !input_path
 else
   files = build_mtimes_hash(ARGV)
   if files
-    if options.verbose 
+    if $options.verbose 
       puts "Building #{files.keys.join(', ')}\n\nFiles: #{files.keys.length}"
     end
     files.each do |file|
