@@ -33,14 +33,14 @@ require 'ostruct'
 require 'fileutils.rb'
 require 'rstakeout.rb'
 
-$options = OpenStruct.new(:verbose => false, :output_path => "maml_generated/", :watch_mode => false, :sleep_time => 1, :synchronous => false)
+$options = OpenStruct.new(:verbose => false, :output_path => "maml_generated", :watch_mode => false, :sleep_time => 1, :synchronous => false)
 
 OptionParser.new do |opts|
   opts.banner = "Usage: maml.rb [options] <command> <filespec>+"
   opts.on("-v", "--verbose") do |v|
     $options.verbose = v
   end
-  opts.on("-o", "--output_path") do |o|
+  opts.on("-o", "--output-path PATH", String) do |o|
     $options.output_path = o
   end
   opts.on("-w", "--watch-mode") do |w|
@@ -409,9 +409,9 @@ end
 
 def convert(input_path)
   if input_path.upcase.index(/MXML/)
-    to_maml input_path, $options.output_path + "maml/" + input_path.gsub(".mxml", ".maml")
+    to_maml input_path, $options.output_path + "/maml/" + input_path.gsub(".mxml", ".maml")
   elsif input_path.upcase.index(/MAML/)
-    to_mxml input_path, $options.output_path + "mxml/" + input_path.gsub(".maml", ".mxml")
+    to_mxml input_path, $options.output_path + "/mxml/" + input_path.gsub(".maml", ".mxml")
   end
 end
 
@@ -423,7 +423,8 @@ def build_mtimes_hash(file_paths)
   files
 end
 
-input_path = ARGV[0];
+input_path = ARGV.pop;
+puts input_path
 if !input_path
   puts "================================================="
   puts "== maml.rb version ASYMPTOTIC TO ZERO"
