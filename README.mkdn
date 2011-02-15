@@ -223,68 +223,68 @@ Would convert to MAML:
 
 Which would convert back to MXML (effectively a tidy script):
 
-<s:Application xmlns:fx="http://ns.adobe.com/mxml/2009" xmlns:mx="library://ns.adobe.com/flex/mx" xmlns:s="library://ns.adobe.com/flex/spark" creationComplete="onCreationComplete()">
-  <s:SkinnableContainer width="100%" height="100%">
-    <fx:Metadata>
-          [HostComponent("spark.components.List")]    </fx:Metadata>
-    <s:Label id="label1">
-    </s:Label>
-    <fx:Script>
-    <![CDATA[    
-        import flash.events.Event;
+	<s:Application xmlns:fx="http://ns.adobe.com/mxml/2009" xmlns:mx="library://ns.adobe.com/flex/mx" xmlns:s="library://ns.adobe.com/flex/spark" creationComplete="onCreationComplete()">
+	  <s:SkinnableContainer width="100%" height="100%">
+	    <fx:Metadata>
+	          [HostComponent("spark.components.List")]    </fx:Metadata>
+	    <s:Label id="label1">
+	    </s:Label>
+	    <fx:Script>
+	    <![CDATA[    
+	        import flash.events.Event;
     
-        protected function onCreationComplete():void
-        {
+	        protected function onCreationComplete():void
+	        {
           
-        }
+	        }
     
-        protected function onChange(e:Event):void
-        {
+	        protected function onChange(e:Event):void
+	        {
           
-        }
+	        }
     
-      ]]>
-    </fx:Script>
-    <fx:Script>
-    fweeeeeeee    <![CDATA[
-    ]]>
-    </fx:Script>
-    <s:VGroup width="100%" height="100%">
-      <s:Label id="whatAFineLabel">
-      </s:Label>
-      <s:HGroup width="100%" height="50">
-        <s:Label text="Fwee">
-        </s:Label>
-        <s:Label text="Fwei">
-        </s:Label>
-        <s:Label text="Fwo">
-        </s:Label>
-        <s:Label text="Fwum">
-        </s:Label>
-      </s:HGroup>
-      <mx:DataGrid id="dg" dataProvider="{arrayCollectionToBind}" width="100%" height="100%" change="onChange(event)">
-      </mx:DataGrid>
-    </s:VGroup>
-    <mx:DataGridColumn id="giveMeTunnelVision">
-      <mx:itemRenderer>
-        <fx:Component>
-          <mx:Label>
-            <fx:Script>
-                          <![CDATA[                            override public function set data(value:Object):void
-                            {      
-                              if(value != null)
-                              {
-                                super.data = value;
-                              }
-                            }
-                          ]]>
-            </fx:Script>
-          </mx:Label>
-        </fx:Component>
-      </mx:itemRenderer>
-    </mx:DataGridColumn>
-  </s:SkinnableContainer>
-</s:Application>
+	      ]]>
+	    </fx:Script>
+	    <fx:Script>
+	    fweeeeeeee    <![CDATA[
+	    ]]>
+	    </fx:Script>
+	    <s:VGroup width="100%" height="100%">
+	      <s:Label id="whatAFineLabel">
+	      </s:Label>
+	      <s:HGroup width="100%" height="50">
+	        <s:Label text="Fwee">
+	        </s:Label>
+	        <s:Label text="Fwei">
+	        </s:Label>
+	        <s:Label text="Fwo">
+	        </s:Label>
+	        <s:Label text="Fwum">
+	        </s:Label>
+	      </s:HGroup>
+	      <mx:DataGrid id="dg" dataProvider="{arrayCollectionToBind}" width="100%" height="100%" change="onChange(event)">
+	      </mx:DataGrid>
+	    </s:VGroup>
+	    <mx:DataGridColumn id="giveMeTunnelVision">
+	      <mx:itemRenderer>
+	        <fx:Component>
+	          <mx:Label>
+	            <fx:Script>
+	                          <![CDATA[                            override public function set data(value:Object):void
+	                            {      
+	                              if(value != null)
+	                              {
+	                                super.data = value;
+	                              }
+	                            }
+	                          ]]>
+	            </fx:Script>
+	          </mx:Label>
+	        </fx:Component>
+	      </mx:itemRenderer>
+	    </mx:DataGridColumn>
+	  </s:SkinnableContainer>
+	</s:Application>
 
 ## Known Issues
 
