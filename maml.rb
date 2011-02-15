@@ -83,8 +83,8 @@ def to_maml(input_path, output_path)
   # scriptNodes = slice_all_nodes(result, /<([A-Za-z0-9:]+)?Script/, /<\/([A-Za-z0-9:]+)Script>/, cdata_indicator)
   scriptNodes = slice_all_nodes(result, /<fx:Script/, "</fx:Script>", script_indicator)
   scriptNodes += slice_all_nodes(result, /<mx:Script/, "</mx:Script>", script_indicator)
-  metadataNodes = slice_all_nodes(result, /<fx:Metadata>/, "</fx:Metadata>", metadata_indicator)
-  metadataNodes += slice_all_nodes(result, /<mx:Metadata>/, "</mx:Metadata>", metadata_indicator)
+  metadata_nodes = slice_all_nodes(result, /<fx:Metadata>/, "</fx:Metadata>", metadata_indicator)
+  metadata_nodes += slice_all_nodes(result, /<mx:Metadata>/, "</mx:Metadata>", metadata_indicator)
   
   # Strip off <?xml version="1.0" encoding="utf-8"?>
   declarations = slice_node(result, "<?", "?>")
@@ -118,10 +118,10 @@ def to_maml(input_path, output_path)
   
   # Remove all whitespace outside of tags and between attributes, outside of CDATA
 
-  result = result.gsub(/\>[\s]+\</, "><")
-  result = result.gsub(/[\n\t]/, " ")
-  result = result.gsub(/[\s]+/, " ")
-  result = result.gsub(/^[\s]+/, "") # leading whitespace before content breaks things
+  result.gsub!(/\>[\s]+\</, "><")
+  result.gsub!(/[\n\t]/, " ")
+  result.gsub!(/[\s]+/, " ")
+  result.gsub!(/^[\s]+/, "") # leading whitespace before content breaks things
 
   # Convert self closing tags to open and closed tags
 
@@ -129,26 +129,26 @@ def to_maml(input_path, output_path)
   
   # Persist an indentation value, ++ every time a closing tag is found, -- when the tag that initiated the increment is closed.
   indents = 0
-  nestedResult = ""
+  maml_output = ""
   result = result[1..result.length]
   result = result.split(/\>\</)
 
   begin
-    nestedLevel = result.shift
+    mxml_node_string = result.shift
     
     # For those MXML nodes that have legitmate values rather than attributes, assign them to the value
     # property.
     #
     # i.e. <mx:String>Helvetica</mx:String>
-    if nestedLevel.split(/</).length > 1
-      kibblesAndBits = nestedLevel.split(/</).join("☠").split(/>/).join("☠").split("☠")
-      nestedLevel = kibblesAndBits[0] + ' mxml_node_value="' + kibblesAndBits[1] + '" /'
+    if mxml_node_string.split(/</).length > 1
+      kibblesAndBits = mxml_node_string.split(/</).join("☠").split(/>/).join("☠").split("☠")
+      mxml_node_string = kibblesAndBits[0] + ' mxml_node_value="' + kibblesAndBits[1] + '" /'
     end
     
     # put the split target back on
-    nestedLevel = "<" + nestedLevel + ">\n"
+    mxml_node_string = "<" + mxml_node_string + ">\n"
 
-    if nestedLevel.index(script_indicator)
+    if mxml_node_string.index(script_indicator)
 
       script = scriptNodes.shift
       tag = ""
@@ -162,11 +162,11 @@ def to_maml(input_path, output_path)
         tag += line
       end while lines.length > 0
       tag += "\n"
-      nestedResult += tag
+      maml_output += tag
 
-    elsif nestedLevel.index(metadata_indicator)
+    elsif mxml_node_string.index(metadata_indicator)
       
-      metadata = metadataNodes.shift
+      metadata = metadata_nodes.shift
       tag = ""
       lines = metadata.split("\n")
       indent_in_spaces = "".rjust($options.indent_size)
@@ -178,12 +178,12 @@ def to_maml(input_path, output_path)
         tag += line
       end while lines.length > 0
       tag += "\n"
-      nestedResult += tag
+      maml_output += tag
 
     else
       # determine kind of node
-      selfClosingNode = nestedLevel.index(/\/>/)
-      closingNode = nestedLevel.index(/<\//)
+      selfClosingNode = mxml_node_string.index(/\/>/)
+      closingNode = mxml_node_string.index(/<\//)
       openingNode = !closingNode
 
       # revert earlier increment if this is closing node of an earlier open one
@@ -192,23 +192,23 @@ def to_maml(input_path, output_path)
       end
       
       # now that we've got a read on how far to indent, remove brackets
-      nestedLevel = nestedLevel.gsub(/<\//, "");
-      nestedLevel = nestedLevel.gsub(/\/>/, "");
-      nestedLevel = nestedLevel.gsub(/[\s]+>/, ">"); # whitespace before closing tag breaks the attribute split
-      nestedLevel = nestedLevel.gsub(/[<>]/, "");
+      mxml_node_string = mxml_node_string.gsub(/<\//, "");
+      mxml_node_string = mxml_node_string.gsub(/\/>/, "");
+      mxml_node_string = mxml_node_string.gsub(/[\s]+>/, ">"); # whitespace before closing tag breaks the attribute split
+      mxml_node_string = mxml_node_string.gsub(/[<>]/, "");
 
       # ensure one space between any = operator 
-      nestedLevel = nestedLevel.gsub(/([\S])\=([\S])/, "\\1 = \\2")
+      mxml_node_string = mxml_node_string.gsub(/([\S])\=([\S])/, "\\1 = \\2")
 
       # split between class name and attributes
-      twoHalves = nestedLevel.split(" ", 2)
+      twoHalves = mxml_node_string.split(" ", 2)
       klass = twoHalves[0]
       attrNameValuePairs = twoHalves[1].split("\"");
 
       # pad with indentation at this level
       klass = klass.rjust(klass.length + (indents*$options.indent_size))
     
-      nestedLevelWithAttrs = klass;
+      mxml_node_string_with_attrs = klass;
 
       # find largest attribute name in order to pad correctly
       largestAttrNameLength = 0;
@@ -231,16 +231,16 @@ def to_maml(input_path, output_path)
         attrValue = attrHalves[1] || ""
         toPad = largestAttrNameLength - attrName.length - 1
         paddedAttr = attrName.ljust(attrName.length + toPad) + " = " + attrValue;
-        indentedAttr = paddedAttr.rjust(paddedAttr.length + (indents*$options.indent_size))
-        nestedLevelWithAttrs += "\n" + indentedAttr
+        indentedAttr = paddedAttr.rjust(paddedAttr.length + (indents * $options.indent_size))
+        mxml_node_string_with_attrs += "\n" + indentedAttr
       end
   
-      nestedLevelWithAttrs += "\n\n"
+      mxml_node_string_with_attrs += "\n\n"
 
       # append to accumulating string, ixnay the closing nodes for this formatting style
       if openingNode
 
-        nestedResult += nestedLevelWithAttrs
+        maml_output += mxml_node_string_with_attrs
       end
 
       # increment indentation for next node if this one never closed
@@ -255,7 +255,7 @@ def to_maml(input_path, output_path)
     end
   end while result.length > 0
   
-  output = nestedResult 
+  output = maml_output 
 
   write output, output_path
 
@@ -270,7 +270,7 @@ def to_mxml(input_path, output_path)
   mxmlNode.cdata = ""
   mxmlNode.indent = 0
   mxmlNodes = []
-  isObjectDeclarationLine = true # first object must always be first line
+  is_newline_separator = true # first object must always be first line
 
   result = ""
   File.readlines( input_path, 'r' ).each do |line|
@@ -302,9 +302,9 @@ def to_mxml(input_path, output_path)
         mxmlNode.indent = 0
       end
       
-      isObjectDeclarationLine = true
+      is_newline_separator = true
     else
-      if isObjectDeclarationLine
+      if is_newline_separator
         strippedLine = line.lstrip.rstrip
         if strippedLine.index(/\:/)
           tempArr = strippedLine.split(/\:/, 2)
@@ -337,7 +337,7 @@ def to_mxml(input_path, output_path)
         end
         # further lines before empty line are attributes
         # indicate that to the logic here
-        isObjectDeclarationLine = false
+        is_newline_separator = false
       else
         # is attribute line
 
@@ -366,12 +366,12 @@ def to_mxml(input_path, output_path)
 
   # if file does not end with a new line, the above loop does not
   # push the final node it's building. we check that here
-  if(!isObjectDeclarationLine)
+  if(!is_newline_separator)
     mxmlNodes.push(mxmlNode)
   end
 
   # parse into mxml bracket notation
-  fullOutput = ""
+  mxml_output = ""
   nodesToCloseYet = []
 
   # we first pop off the mother node since she has no indentation
@@ -379,7 +379,7 @@ def to_mxml(input_path, output_path)
   containerNode = mxmlNodes.shift()
   if(containerNode)
     containerNode.indent = 0
-    fullOutput = open_mxml_node(containerNode)
+    mxml_output = open_mxml_node(containerNode)
     nodesToCloseYet.push(containerNode)
   end
 
@@ -397,20 +397,20 @@ def to_mxml(input_path, output_path)
         # continue through set of nodesToClose seeking parent
 
         # puts "Found child of previous node that needs closing: " + nodeToClose.klass + " before " + mxmlNode.klass
-        fullOutput += close_mxml_node(nodeToClose)
+        mxml_output += close_mxml_node(nodeToClose)
 
       elsif nodeToClose.indent == mxmlNode.indent
         # nodeToClose is a sibling. close it first then 
         # continue through set of nodesToClose seeking parent
 
         # puts "Found sibling: " + nodeToClose.klass + " of " + mxmlNode.klass
-        fullOutput += close_mxml_node(nodeToClose)
+        mxml_output += close_mxml_node(nodeToClose)
 
       else
         # the nodeToClose is the parent of the current node. not ready to close yet
         # we may now write out the opening node which we are currently iterating through
         
-        fullOutput += openingNode
+        mxml_output += openingNode
         nodesToCloseYet.push(nodeToClose)
         parentNodeFound = true;
       end
@@ -424,10 +424,10 @@ def to_mxml(input_path, output_path)
   # whatever parent node(s) did not have children were not found in the loop above
   # they need to be closed out now
   while nodesToCloseYet.length > 0
-    fullOutput += close_mxml_node(nodesToCloseYet.pop())
+    mxml_output += close_mxml_node(nodesToCloseYet.pop())
   end
 
-  write fullOutput, output_path
+  write mxml_output, output_path
 
 end
 
@@ -529,29 +529,17 @@ def write(output, output_path)
 end
 
 class MxmlNode
-  def initialize()
-  end
-  attr_reader :lindent, :indent
-  attr_writer :lindent, :indent
-  attr_reader :lnamespace, :namespace
-  attr_writer :lnamespace, :namespace
-  attr_reader :lklass, :klass
-  attr_writer :lklass, :klass
-  attr_reader :lattributes, :attributes
-  attr_writer :lattributes, :attributes
-  attr_reader :lvalue, :value
-  attr_writer :lvalue, :value
-  attr_reader :lcdata, :cdata
-  attr_writer :lcdata, :cdata
+  attr_accessor :indent
+  attr_accessor :namespace
+  attr_accessor :klass
+  attr_accessor :attributes
+  attr_accessor :value
+  attr_accessor :cdata
 end
 
 class MxmlNodeAttribute
-  def initialize()
-  end
-  attr_reader :lname, :name
-  attr_writer :lname, :name
-  attr_reader :lvalue, :value
-  attr_writer :lvalue, :value
+  attr_accessor :name
+  attr_accessor :value
 end
 
 def convert(input_path)
