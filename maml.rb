@@ -33,7 +33,7 @@ require 'ostruct'
 require 'fileutils.rb'
 require 'rstakeout.rb'
 
-$options = OpenStruct.new(:verbose => false, :output_path => "maml_generated", :watch_mode => false, :sleep_time => 1, :synchronous => false, :indent_size => 2)
+$options = OpenStruct.new(:verbose => false, :output_path => "maml_generated", :watch_mode => false, :sleep_time => 1, :synchronous => false, :indent_size => 2, :dry_run => false)
 
 OptionParser.new do |opts|
   opts.banner = "Usage: maml.rb [options] <command> <filespec>+"
@@ -45,6 +45,9 @@ OptionParser.new do |opts|
   end
   opts.on("-w", "--watch-mode") do |w|
     $options.watch_mode = w
+  end
+  opts.on("-d", "--dry-run") do |d|
+    $options.dry_run = d
   end
   opts.on("-t", "--sleep-time T", Integer, "time to sleep after each loop iteration") do |t|
     $options.sleep_time = t
@@ -254,7 +257,7 @@ def to_maml(input_path, output_path)
   
   output = nestedResult 
 
-  write_to_file output, output_path
+  write output, output_path
 
 end
 
@@ -424,7 +427,7 @@ def to_mxml(input_path, output_path)
     fullOutput += close_mxml_node(nodesToCloseYet.pop())
   end
 
-  write_to_file fullOutput, output_path
+  write fullOutput, output_path
 
 end
 
@@ -491,22 +494,21 @@ def close_mxml_node(mxmlNode)
   return closingOutput
 end
 
-def write_to_file(output, output_path)
+def write(output, output_path)
 
   if !output || output == ""
     puts "=========================================================="
     puts "== Nothing to output!"
     puts "=========================================================="
-  elsif !output_path
+  elsif !output_path || $options.dry_run
     puts "=========================================================="
-    puts "== No output_path specified, printing to std_out begins"
+    puts "== Dry run begins for target destination: " + output_path
     puts "=========================================================="
-#    puts output
+    puts output
     puts "=========================================================="
-    puts "== No output_path specified, printing to std_out complete"
+    puts "== Dry run complete for target destination: " + output_path
     puts "=========================================================="
   else
-
     dirname = File.dirname(output_path)
     if !File.exist?(dirname)
       if $options.verbose
