@@ -268,6 +268,7 @@ def to_mxml(input_path, output_path)
   mxmlNode = MxmlNode.new
   mxmlNode.attributes = []
   mxmlNode.cdata = ""
+  mxmlNode.indent = 0
   mxmlNodes = []
   isObjectDeclarationLine = true # first object must always be first line
 
@@ -285,8 +286,6 @@ def to_mxml(input_path, output_path)
     if(whitespace)
       # MatchData object contains full match in 0 index
       mxmlNode.indent = whitespace[0].length
-    else
-      mxmlNode.indent = 0
     end
 
     # TO FIX: Shouldn't need three variations on the FB tools hack. Find a better way to survive
@@ -300,6 +299,7 @@ def to_mxml(input_path, output_path)
         mxmlNode = MxmlNode.new
         mxmlNode.attributes = []
         mxmlNode.cdata = ""
+        mxmlNode.indent = 0
       end
       
       isObjectDeclarationLine = true
