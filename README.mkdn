@@ -141,7 +141,6 @@ And back again to MXML:
 * All comments are stripped
 * Tabs become spaces
 * Self-closing tags get expanded
-* A single <fx:Script> tag is preserved during the conversion.
 * If you toss in a non-existent dinosaur, you set the MAML on fire
 
 ## Future Ideas

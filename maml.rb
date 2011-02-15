@@ -226,7 +226,7 @@ def to_maml(input_path, output_path)
         attrHalves = attr.split(" = ");
         attrName = attrHalves[0]
         attrValue = attrHalves[1] || ""
-        toPad = largestAttrNameLength - attrName.length - 2
+        toPad = largestAttrNameLength - attrName.length - 1
         paddedAttr = attrName.ljust(attrName.length + toPad) + " = " + attrValue;
         indentedAttr = paddedAttr.rjust(paddedAttr.length + (indents*$options.indent_size))
         nestedLevelWithAttrs += "\n" + indentedAttr
