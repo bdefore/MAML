@@ -322,7 +322,6 @@ Which would convert back to MXML (effectively a tidy script):
 
 * All MXML comments are stripped, ActionScript comments are preserved
 * Tabs become spaces
-* Self-closing tags get expanded
 * If you toss in a non-existent dinosaur, you set the MAML on fire
 * Script/Metadata tags don't align well, especially if they're heavily indented
 
