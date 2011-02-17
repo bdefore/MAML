@@ -19,11 +19,11 @@ MAML is MXML in the spirit of YAML.
 	From MAML, generate a dinosaur:
 	ruby maml.rb test.maml
 	
+	Rebuild my dinosaur into a directory named Gondwanaland on my Desktop:
+	ruby maml.rb -o ~/Desktop/Gondwanaland test.maml
+
 	Rebuild my dinosaur every time I save my MAML:
 	ruby maml.rb -w test.maml
-
-	Rebuild my dinosaur into a directory named Gondwanaland on my Desktop:
-	ruby maml.rb -w -o ~/Desktop/Gondwanaland test.maml
 
 	Watch a MAML directory, rebuild its corresponding dinosaur whenever I save:
 	ruby maml.rb -w ~/Documents/Flex\ Builder\ 3/My\ Flex\ Project/src
