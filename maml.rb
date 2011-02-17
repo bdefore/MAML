@@ -471,7 +471,7 @@ def open_mxml_node(mxmlNode)
 
   total = openingNode + attributeString + closer
   if cdata != ""
-    total += "\n" + metadata + cdata
+    total += "\n" + cdata
   end
   
   return total
