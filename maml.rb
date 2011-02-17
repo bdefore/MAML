@@ -66,12 +66,7 @@ OptionParser.new do |opts|
   end
 end.parse!
 
-def to_maml(input_path, output_path)
-
-  result = ""
-  File.readlines( input_path, 'r' ).each do |line|
-    result += line
-  end
+def to_maml(mxml_input)
 
   # Strip <fx:Script> node off, put at end later. For now only fx namespace allowed for Script
   # scriptMatch = /(<fx:Script>)([\s\S]+)^(<\/fx:Script>)/
@@ -86,39 +81,39 @@ def to_maml(input_path, output_path)
   # NOTE: Start index is missing closing bracket to account for Flash Builder skinning 
   # declaration i.e. <fx:Script fb:purpose="styling">
   #
-  # scriptNodes = slice_all_nodes(result, /<([A-Za-z0-9:]+)?Script/, /<\/([A-Za-z0-9:]+)Script>/, cdata_indicator)
-  scriptNodes = slice_all_nodes(result, /<fx:Script/, "</fx:Script>", script_indicator)
-  scriptNodes += slice_all_nodes(result, /<mx:Script/, "</mx:Script>", script_indicator)
-  metadata_nodes = slice_all_nodes(result, /<fx:Metadata>/, "</fx:Metadata>", metadata_indicator)
-  metadata_nodes += slice_all_nodes(result, /<mx:Metadata>/, "</mx:Metadata>", metadata_indicator)
+  # scriptNodes = slice_all_nodes(mxml_input, /<([A-Za-z0-9:]+)?Script/, /<\/([A-Za-z0-9:]+)Script>/, cdata_indicator)
+  scriptNodes = slice_all_nodes(mxml_input, /<fx:Script/, "</fx:Script>", script_indicator)
+  scriptNodes += slice_all_nodes(mxml_input, /<mx:Script/, "</mx:Script>", script_indicator)
+  metadata_nodes = slice_all_nodes(mxml_input, /<fx:Metadata>/, "</fx:Metadata>", metadata_indicator)
+  metadata_nodes += slice_all_nodes(mxml_input, /<mx:Metadata>/, "</mx:Metadata>", metadata_indicator)
   
   # Strip off <?xml version="1.0" encoding="utf-8"?>
-  declarations = slice_node(result, "<?", "?>")
+  declarations = slice_node(mxml_input, "<?", "?>")
   # Strip comments
-  comments = slice_all_nodes(result, "<!--", "-->")
+  comments = slice_all_nodes(mxml_input, "<!--", "-->")
   if(comments.length > 0)
-    puts "WARNING: Stripped " + String(comments.length) + " comment(s) when converting from " + input_path
+    puts "WARNING: Stripped " + String(comments.length) + " comment(s) in output file of the format <!-- -->"
   end
 
   # Remove all whitespace outside of tags and between attributes, outside of CDATA
 
-  result.gsub!(/\>[\s]+\</, "><")
-  result.gsub!(/[\n\t]/, " ")
-  result.gsub!(/[\s]+/, " ")
-  result.gsub!(/^[\s]+/, "") # leading whitespace before content breaks things
+  mxml_input.gsub!(/\>[\s]+\</, "><")
+  mxml_input.gsub!(/[\n\t]/, " ")
+  mxml_input.gsub!(/[\s]+/, " ")
+  mxml_input.gsub!(/^[\s]+/, "") # leading whitespace before content breaks things
 
   # Convert self closing tags to open and closed tags
 
-  result = result.gsub(/[^>]<([A-Za-z0-9]+):([A-Za-z0-9]+) ([^>]+) \/>/, "\\1:\\2 \\3>\n</\\1:\\2>");
+  mxml_input = mxml_input.gsub(/[^>]<([A-Za-z0-9]+):([A-Za-z0-9]+) ([^>]+) \/>/, "\\1:\\2 \\3>\n</\\1:\\2>");
   
   # Persist an indentation value, ++ every time a closing tag is found, -- when the tag that initiated the increment is closed.
   indents = 0
   maml_output = ""
-  result = result[1..result.length]
-  result = result.split(/\>\</)
+  mxml_input = mxml_input[1..mxml_input.length]
+  mxml_input = mxml_input.split(/\>\</)
 
   begin
-    mxml_node_string = result.shift
+    mxml_node_string = mxml_input.shift
     
     # For those MXML nodes that have legitmate values rather than attributes, assign them to the value
     # property.
@@ -237,32 +232,24 @@ def to_maml(input_path, output_path)
         indents -= 1
       end
     end
-  end while result.length > 0
+  end while mxml_input.length > 0
   
-  output = maml_output 
-
-  write output, output_path
+  return maml_output
 
 end
 
-def to_mxml(input_path, output_path)
+def to_mxml(maml_input)
 
   # TO FIX: When two empty lines are in order, parsing breaks
-
+  mxmlNodes = []
   mxmlNode = MxmlNode.new
   mxmlNode.attributes = []
   mxmlNode.cdata = ""
   mxmlNode.indent = 0
   mxmlNode.children = []
-  mxmlNodes = []
   passed_newline_separator = true # first object must always be first line
 
-  result = ""
-  File.readlines( input_path, 'r' ).each do |line|
-    result += line
-  end
-
-  lines = result.split("\n")
+  lines = maml_input.split("\n")
   
   while lines.length > 0
     line = lines.shift
@@ -338,7 +325,7 @@ def to_mxml(input_path, output_path)
         # to nil if we're not careful. worth a warning though that it could be due to a parse
         # problem
         if !value
-          puts "WARNING: Property '" + name.rstrip + "' evaluated to nil on file " + input_path + ". This may be normal if you set to an empty string, which is what it will be assigned to."
+          puts "WARNING: Property '" + name.rstrip + "' evaluated to nil. This may be normal if you set to an empty string, which is what it will be assigned to."
           value = ""
         end
         name.rstrip!
@@ -428,7 +415,7 @@ def to_mxml(input_path, output_path)
   # This is a workaround
   mxml_output.gsub!(/\n\n/, "\n")
 
-  write mxml_output, output_path
+  return mxml_output
 
 end
 
@@ -553,16 +540,32 @@ class MxmlNodeAttribute
   attr_accessor :value
 end
 
-def convert(input_path)
-  if $options.verbose
-    puts "Opening file at " + input_path
-  end
-  if input_path.upcase.index(/MXML/)
-    to_maml input_path, $options.output_path + "/maml/" + input_path.gsub(".mxml", ".maml")
-  elsif input_path.upcase.index(/MAML/)
-    to_mxml input_path, $options.output_path + "/mxml/" + input_path.gsub(".maml", ".mxml")
+def convert(raw_text, to)
+  if to == "MAML"
+    return to_maml raw_text
+  elsif to == "MXML"
+    return to_mxml raw_text
   end
 end
+
+def tidy(raw_text, to)
+  if to == "MXML"
+    return to_mxml(to_maml(raw_text))
+  elsif to == "MAML"
+    return to_maml(to_mxml(raw_text))
+  end
+end
+
+def read_file(file_path)
+  if $options.verbose
+    puts "Opening file at " + file_path
+  end
+  result = ""
+  File.readlines( file_path, 'r' ).each do |line|
+    result += line
+  end
+  return result
+end  
 
 def convert_files(file_paths)
   if file_paths
@@ -572,10 +575,24 @@ def convert_files(file_paths)
     end
     fileArgString = ""
     file_paths.each do |file|
-      # only pass in file names to convert, not dirs
       if !File.directory?(file)
-        convert(file)
+        if file.upcase.index(/MXML/)
+          to = "MAML"
+        elsif file.upcase.index(/MAML/)
+          to = "MXML"
+        end
+
+        converted_output = convert(read_file(file), to)
+
+        if to == "MAML"
+          write(converted_output, $options.output_path + "/maml/" + file.gsub(".mxml", ".maml"))
+        elsif to == "MXML"
+          write(converted_output, $options.output_path + "/mxml/" + file.gsub(".maml", ".mxml"))
+        end
+
         fileArgString += file + " "
+      else
+        # ignore, only pass in file names to convert, not dirs
       end
     end
     end_time = Time.now
@@ -593,7 +610,7 @@ def convert_files(file_paths)
   end  
 end
 
-def build_mtimes_hash(file_paths)
+def build_checksums(file_paths)
   files = {}
   file_paths.each { |file_path|
     Dir[file_path].each { |file| files[file] = File.mtime(file) }
@@ -621,7 +638,7 @@ if $options.watch_mode
     puts "Watching files: " + file_paths.join(", ")
   end
   stakeout_command = "ruby maml.rb " + file_paths.join(" ")
-  files = build_mtimes_hash(file_paths)
+  files = build_checksums(file_paths)
   watch(stakeout_command, files, $options)
 else
   convert_files(file_paths)

@@ -36,7 +36,7 @@ Command line switches:
 	is 'maml_generated'.
 	
 	-w, --watch-mode
-	Will check for when a file or the files within a directory specified in the input path have changed and
+	Will check for when a file or files within a directory specified in the input path have changed and
 	trigger conversions automatically to the output path.
 	
 	-t, --sleep-time SECONDS
