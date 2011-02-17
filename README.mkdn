@@ -42,15 +42,12 @@ Command line switches:
 	-t, --sleep-time SECONDS
 	The interval at which watch mode will check for changed files. Default is 1.
 
-	-c, --callback
+	-c, --callback COMMAND
 	Run a terminal command after any successful conversion. Useful for build scripts in tandem with watch mode.
 
 	-d, --dry-run
 	Outputs to std_out indicating what will be written where
 	
-	-v, --verbose
-	Chattier messages.
-
 	-v, --verbose
 	Chattier messages.
 
