@@ -10,6 +10,9 @@ MAML is MXML in the spirit of YAML.
     
 **WARNING** Use at your own discretion, this is experimental hobby code and should not be relied on for building rockets to space. Check in your code before you mess with this.
 
+	Compile a MAML (behind the scenes, convert to a dinosaur, then compile that)
+	ruby mamlc.rb furry.maml
+
 	From MXML, generate a creature that nurses its young from teats:
 	ruby maml.rb test.mxml
 
@@ -27,7 +30,7 @@ MAML is MXML in the spirit of YAML.
 
 	Watch a MAML directory, rebuild dinosaurs to a path whenever I save, and run an Ant task afterwards
 	ruby maml.rb -w ~/Documents/Code/PROJECT_NAME/maml -o ~/Documents/Code/PROJECT_NAME/src -c 'ant -f ~/Documents/Code/PROJECT_NAME/build.xml'
-
+	
 Command line switches:
 	
 	-o, --output-path PATH
@@ -60,7 +63,7 @@ Command line switches:
 
 ## Example
 
-An example MXML, written by a spider on LSD:
+	An example MXML, written by a spider on LSD:
 
 	<s:Application
 		xmlns:fx="http://ns.adobe.com/mxml/2009" 
@@ -69,14 +72,19 @@ An example MXML, written by a spider on LSD:
 		creationComplete="onCreationComplete()"
 		>
 
+		<fx:Metadata>
+			[HostComponent("spark.components.List")]
+		</fx:Metadata>
+
+		<s:states>
+	        <s:State name="normal" />
+	        <s:State name="disabled" />
+	    </s:states>
+
 		<s:SkinnableContainer width="100%" height="100%"
 
 
 			>
-
-			<fx:Metadata>
-				[HostComponent("spark.components.List")]
-			</fx:Metadata>
 
 	<s:Label id="label1" />
 
@@ -84,6 +92,10 @@ An example MXML, written by a spider on LSD:
 	<![CDATA[
 
 			import flash.events.Event;
+			import mx.collections.ArrayCollection;
+		
+			[Bindable]
+			protected var arrayCollectionToBind:ArrayCollection;
 
 			protected function onCreationComplete():void
 			{
@@ -102,7 +114,7 @@ An example MXML, written by a spider on LSD:
 				<!-- Can I have another tag sir? -->
 	  			<fx:Script>
 	<![CDATA[
-	fweeeeeeee
+	// fweeeeeeee
 	]]>
 						</fx:Script>
 
@@ -120,29 +132,32 @@ An example MXML, written by a spider on LSD:
 				<mx:DataGrid id="dg" dataProvider="{arrayCollectionToBind}" width="100%" height="100%" change="onChange(event)"/>
 			</s:VGroup          >
 
-			<mx:DataGridColumn id="giveMeTunnelVision">
-				<mx:itemRenderer>
-					<fx:Component>
-						<mx:Label>
-							<fx:Script>
-								<![CDATA[
-									override public function set data(value:Object):void
-									{      
-										if(value != null)
-										{
-											super.data = value;
-										}
-									}
-								]]>
-							</fx:Script>
-						</mx:Label>
-					</fx:Component>
-				</mx:itemRenderer>
-			</mx:DataGridColumn>
-
+		
+			<mx:DataGrid id="tunnelVision">
+				<mx:columns>
+					<mx:DataGridColumn id="giveMeTunnelVision">
+						<mx:itemRenderer>
+							<fx:Component>
+								<mx:Label>
+									<fx:Script>
+										<![CDATA[
+											override public function set data(value:Object):void
+											{      
+												if(value != null)
+												{
+													super.data = value;
+												}
+											}
+										]]>
+									</fx:Script>
+								</mx:Label>
+							</fx:Component>
+						</mx:itemRenderer>
+					</mx:DataGridColumn>
+				</mx:columns>
+			</mx:DataGrid>
 		</s:SkinnableContainer>
-
-	</s:Application>	
+	</s:Application>
 
 Would convert to MAML:
 
@@ -152,13 +167,21 @@ Would convert to MAML:
 	xmlns:s          = library://ns.adobe.com/flex/spark
 	creationComplete = onCreationComplete()
 
+	  <fx:Metadata>
+	      [HostComponent("spark.components.List")]
+	    </fx:Metadata>
+
+	  s:states
+
+	    s:State
+	    name = normal
+
+	    s:State
+	    name = disabled
+
 	  s:SkinnableContainer
 	  width  = 100%
 	  height = 100%
-
-	    <fx:Metadata>
-	          [HostComponent("spark.components.List")]
-	        </fx:Metadata>
 
 	    s:Label
 	    id = label1
@@ -167,6 +190,10 @@ Would convert to MAML:
 	    <![CDATA[
     
 	        import flash.events.Event;
+	        import mx.collections.ArrayCollection;
+        
+	        [Bindable]
+	        protected var arrayCollectionToBind:ArrayCollection;
     
 	        protected function onCreationComplete():void
 	        {
@@ -183,7 +210,7 @@ Would convert to MAML:
 
 	    <fx:Script>
 	    <![CDATA[
-	    fweeeeeeee
+	    // fweeeeeeee
 	    ]]>
 	              </fx:Script>
 
@@ -217,26 +244,32 @@ Would convert to MAML:
 	      height       = 100%
 	      change       = onChange(event)
 
-	    mx:DataGridColumn
-	    id = giveMeTunnelVision
+	    mx:DataGrid
+	    id = tunnelVision
 
-	      mx:itemRenderer
+	      mx:columns
 
-	        fx:Component
+	        mx:DataGridColumn
+	        id = giveMeTunnelVision
 
-	          mx:Label
+	          mx:itemRenderer
 
-	            <fx:Script>
-	                          <![CDATA[
-	                            override public function set data(value:Object):void
-	                            {      
-	                              if(value != null)
-	                              {
-	                                super.data = value;
-	                              }
-	                            }
-	                          ]]>
-	                        </fx:Script>
+	            fx:Component
+
+	              mx:Label
+
+	                <fx:Script>
+	                                  <![CDATA[
+	                                    override public function set data(value:Object):void
+	                                    {      
+	                                      if(value != null)
+	                                      {
+	                                        super.data = value;
+	                                      }
+	                                    }
+	                                  ]]>
+	                                </fx:Script>
+
 
 Which would convert back to MXML (effectively a tidy script):
 
@@ -245,16 +278,26 @@ Which would convert back to MXML (effectively a tidy script):
 	   xmlns:mx="library://ns.adobe.com/flex/mx"
 	   xmlns:s="library://ns.adobe.com/flex/spark"
 	   creationComplete="onCreationComplete()">
+	  <fx:Metadata>
+	      [HostComponent("spark.components.List")]  </fx:Metadata>
+	  <s:states>
+	    <s:State
+	       name="normal" />
+	    <s:State
+	       name="disabled" />
+	  </s:states>
 	  <s:SkinnableContainer
 	     width="100%"
 	     height="100%">
-	    <fx:Metadata
-	          [HostComponent("spark.components.List")] />
 	    <s:Label
 	       id="label1" />
-	    <fx:Script
+	    <fx:Script>
 	    <![CDATA[    
 	        import flash.events.Event;
+	        import mx.collections.ArrayCollection;
+        
+	        [Bindable]
+	        protected var arrayCollectionToBind:ArrayCollection;
     
 	        protected function onCreationComplete():void
 	        {
@@ -267,11 +310,11 @@ Which would convert back to MXML (effectively a tidy script):
 	        }
     
 	      ]]>
-	 />
-	    <fx:Script
-	    fweeeeeeee    <![CDATA[
+	    </fx:Script>
+	    <fx:Script>
+	    <![CDATA[    // fweeeeeeee
 	    ]]>
-	 />
+	    </fx:Script>
 	    <s:VGroup
 	       width="100%"
 	       height="100%">
@@ -296,25 +339,30 @@ Which would convert back to MXML (effectively a tidy script):
 	          height="100%"
 	          change="onChange(event)" />
 	    </s:VGroup>
-	    <mx:DataGridColumn
-	        id="giveMeTunnelVision">
-	      <mx:itemRenderer>
-	        <fx:Component>
-	          <mx:Label>
-	            <fx:Script
-	                          <![CDATA[                            override public function set data(value:Object):void
-	                            {      
-	                              if(value != null)
-	                              {
-	                                super.data = value;
-	                              }
-	                            }
-	                          ]]>
-	 />
-	          </mx:Label>
-	        </fx:Component>
-	      </mx:itemRenderer>
-	    </mx:DataGridColumn>
+	    <mx:DataGrid
+	        id="tunnelVision">
+	      <mx:columns>
+	        <mx:DataGridColumn
+	            id="giveMeTunnelVision">
+	          <mx:itemRenderer>
+	            <fx:Component>
+	              <mx:Label>
+	                <fx:Script>
+	                                  <![CDATA[                                    override public function set data(value:Object):void
+	                                    {      
+	                                      if(value != null)
+	                                      {
+	                                        super.data = value;
+	                                      }
+	                                    }
+	                                  ]]>
+	                </fx:Script>
+	              </mx:Label>
+	            </fx:Component>
+	          </mx:itemRenderer>
+	        </mx:DataGridColumn>
+	      </mx:columns>
+	    </mx:DataGrid>
 	  </s:SkinnableContainer>
 	</s:Application>
 

@@ -388,7 +388,7 @@ def to_mxml(maml_input)
         
         # if this is its first child, we now know the parent won't self close.
         # we close its opening node here
-        if nodeToClose.children.length == 0
+        if nodeToClose.children.length == 0 && nodeToClose.cdata == ""
           mxml_output += ">"
         end
         mxml_output += "\n" + openingNode
@@ -462,7 +462,8 @@ def open_mxml_node(mxmlNode)
   opener = "<"
   # do not close opening node here, it may be self-closing
   # we will append the close bracket in the close method below
-  closer = "" 
+  # cdata nodes must never self-close, however
+  closer = mxmlNode.cdata == "" ? "" : ">"
   openingNode = opener + mxmlNode.namespace + ":" + mxmlNode.klass
   openingNode = openingNode.rjust(openingNode.length + mxmlNode.indent);
 
@@ -476,7 +477,7 @@ end
 
 def close_mxml_node(mxmlNode)
   closingOutput = ""
-  if mxmlNode.children.length == 0
+  if mxmlNode.children.length == 0 && mxmlNode.cdata == ""
     return " />\n"
   else
     closingOutput += ">"
@@ -612,7 +613,7 @@ def build_checksums(file_paths)
   files
 end
    
-input_path = ARGV.pop;
+input_path = ARGV[0];
 if !input_path
   puts "================================================="
   puts "== maml.rb version ASYMPTOTIC TO ZERO"
