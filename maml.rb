@@ -33,7 +33,7 @@ require 'ostruct'
 require 'fileutils.rb'
 require 'rstakeout.rb'
 
-$options = OpenStruct.new(:verbose => false, :output_path => "maml_generated", :watch_mode => false, :sleep_time => 1, :synchronous => false, :indent_size => 2, :dry_run => false)
+$options = OpenStruct.new(:verbose => false, :output_path => "maml_generated", :watch_mode => false, :sleep_time => 1, :synchronous => false, :indent_size => 2, :dry_run => false, :callback => nil, :mxml_format_style => "LOOSE")
 
 OptionParser.new do |opts|
   opts.banner = "Usage: maml.rb [options] <command> <filespec>+"
@@ -57,6 +57,9 @@ OptionParser.new do |opts|
   end
   opts.on("--indent-size T", Integer, "How many spaces to indent per nested level") do |t|
     $options.indent_size = t
+  end
+  opts.on("--mxml-format-style TIGHT|LOOSE", String) do |o|
+    $options.mxml_format_style = o
   end
   if($options.verbose)
     puts $options
@@ -335,7 +338,7 @@ def to_mxml(input_path, output_path)
         # to nil if we're not careful. worth a warning though that it could be due to a parse
         # problem
         if !value
-          puts "WARNING: Property '" + name.rstrip + "' evaluated to nil on file " + input_path + ". This may normal if you set to an empty string, which is what it will be assigned to."
+          puts "WARNING: Property '" + name.rstrip + "' evaluated to nil on file " + input_path + ". This may be normal if you set to an empty string, which is what it will be assigned to."
           value = ""
         end
         name.rstrip!
@@ -462,7 +465,11 @@ def open_mxml_node(mxmlNode)
   cdata = mxmlNode.cdata
 
   mxmlNode.attributes.each do |attribute|
-    attributeString += " " + attribute.name + "=\"" + attribute.value + "\""
+    if $options.mxml_format_style.upcase == "TIGHT"
+      attributeString += " " + attribute.name + "=\"" + attribute.value + "\""
+    elsif $options.mxml_format_style.upcase == "LOOSE"
+      attributeString += "\n" + "".rjust(mxmlNode.indent + mxmlNode.namespace.length + 2) + attribute.name + "=\"" + attribute.value + "\""
+    end
   end
 
   opener = "<"

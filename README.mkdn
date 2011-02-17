@@ -54,6 +54,10 @@ Command line switches:
 	--indent-size
 	How many spaces to indent per nested level. Default is 2.
 
+	--mxml-format-style TIGHT|LOOSE
+	Whether to place spaces or newlines between MXML attributes. Only applies when converting from MAML. Default
+	is LOOSE
+
 ## Example
 
 An example MXML, written by a spider on LSD:
@@ -70,7 +74,9 @@ An example MXML, written by a spider on LSD:
 
 			>
 
-			<fx:Metadata>[HostComponent("spark.components.List")]</fx:Metadata>
+			<fx:Metadata>
+				[HostComponent("spark.components.List")]
+			</fx:Metadata>
 
 	<s:Label id="label1" />
 
@@ -95,8 +101,8 @@ An example MXML, written by a spider on LSD:
 
 				<!-- Can I have another tag sir? -->
 	  			<fx:Script>
-	fweeeeeeee
 	<![CDATA[
+	fweeeeeeee
 	]]>
 						</fx:Script>
 
@@ -150,7 +156,9 @@ Would convert to MAML:
 	  width  = 100%
 	  height = 100%
 
-	    <fx:Metadata>[HostComponent("spark.components.List")]</fx:Metadata>
+	    <fx:Metadata>
+	          [HostComponent("spark.components.List")]
+	        </fx:Metadata>
 
 	    s:Label
 	    id = label1
@@ -174,8 +182,8 @@ Would convert to MAML:
 	    </fx:Script>
 
 	    <fx:Script>
-	    fweeeeeeee
 	    <![CDATA[
+	    fweeeeeeee
 	    ]]>
 	              </fx:Script>
 
@@ -232,13 +240,19 @@ Would convert to MAML:
 
 Which would convert back to MXML (effectively a tidy script):
 
-	<s:Application xmlns:fx="http://ns.adobe.com/mxml/2009" xmlns:mx="library://ns.adobe.com/flex/mx" xmlns:s="library://ns.adobe.com/flex/spark" creationComplete="onCreationComplete()">
-	  <s:SkinnableContainer width="100%" height="100%">
-	    <fx:Metadata>
-	          [HostComponent("spark.components.List")]    </fx:Metadata>
-	    <s:Label id="label1">
-	    </s:Label>
-	    <fx:Script>
+	<s:Application
+	   xmlns:fx="http://ns.adobe.com/mxml/2009"
+	   xmlns:mx="library://ns.adobe.com/flex/mx"
+	   xmlns:s="library://ns.adobe.com/flex/spark"
+	   creationComplete="onCreationComplete()">
+	  <s:SkinnableContainer
+	     width="100%"
+	     height="100%">
+	    <fx:Metadata
+	          [HostComponent("spark.components.List")] />
+	    <s:Label
+	       id="label1" />
+	    <fx:Script
 	    <![CDATA[    
 	        import flash.events.Event;
     
@@ -253,32 +267,41 @@ Which would convert back to MXML (effectively a tidy script):
 	        }
     
 	      ]]>
-	    </fx:Script>
-	    <fx:Script>
+	 />
+	    <fx:Script
 	    fweeeeeeee    <![CDATA[
 	    ]]>
-	    </fx:Script>
-	    <s:VGroup width="100%" height="100%">
-	      <s:Label id="whatAFineLabel">
-	      </s:Label>
-	      <s:HGroup width="100%" height="50">
-	        <s:Label text="Fwee">
-	        </s:Label>
-	        <s:Label text="Fwei">
-	        </s:Label>
-	        <s:Label text="Fwo">
-	        </s:Label>
-	        <s:Label text="Fwum">
-	        </s:Label>
+	 />
+	    <s:VGroup
+	       width="100%"
+	       height="100%">
+	      <s:Label
+	         id="whatAFineLabel" />
+	      <s:HGroup
+	         width="100%"
+	         height="50">
+	        <s:Label
+	           text="Fwee" />
+	        <s:Label
+	           text="Fwei" />
+	        <s:Label
+	           text="Fwo" />
+	        <s:Label
+	           text="Fwum" />
 	      </s:HGroup>
-	      <mx:DataGrid id="dg" dataProvider="{arrayCollectionToBind}" width="100%" height="100%" change="onChange(event)">
-	      </mx:DataGrid>
+	      <mx:DataGrid
+	          id="dg"
+	          dataProvider="{arrayCollectionToBind}"
+	          width="100%"
+	          height="100%"
+	          change="onChange(event)" />
 	    </s:VGroup>
-	    <mx:DataGridColumn id="giveMeTunnelVision">
+	    <mx:DataGridColumn
+	        id="giveMeTunnelVision">
 	      <mx:itemRenderer>
 	        <fx:Component>
 	          <mx:Label>
-	            <fx:Script>
+	            <fx:Script
 	                          <![CDATA[                            override public function set data(value:Object):void
 	                            {      
 	                              if(value != null)
@@ -287,7 +310,7 @@ Which would convert back to MXML (effectively a tidy script):
 	                              }
 	                            }
 	                          ]]>
-	            </fx:Script>
+	 />
 	          </mx:Label>
 	        </fx:Component>
 	      </mx:itemRenderer>
@@ -297,7 +320,7 @@ Which would convert back to MXML (effectively a tidy script):
 
 ## Known Issues
 
-* All comments are stripped
+* All MXML comments are stripped, ActionScript comments are preserved
 * Tabs become spaces
 * Self-closing tags get expanded
 * If you toss in a non-existent dinosaur, you set the MAML on fire
