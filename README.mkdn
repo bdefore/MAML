@@ -298,7 +298,6 @@ Which would convert back to MXML (effectively a tidy script):
 
 * Make tests for it
 * Make more YAML-like MXML export
-* Self-close nodes that can in MAML -> MXML step
 * Preserve comments in a pleasant format
 * Formatting for ActionScript within Script tags
 * Remove need for namespacing, generate a massively polluted MXML opening tag that contains all possible namespace enumerations, including any directory in the source path, and prepend these generated namespaces to the classes they would affect. This would probably not be appreciated by parallel developers.

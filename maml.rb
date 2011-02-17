@@ -94,28 +94,6 @@ def to_maml(input_path, output_path)
     puts "WARNING: Stripped " + String(comments.length) + " comment(s) when converting from " + input_path
   end
 
-  # MXML metadata interferes with node split of "><"
-  # An unideal solution - tuck metadata into the role of attribute before MAML parsing begins
-  #      ' MXML_METADATA="[\\1(\'\\2\')]" >'
-  # mxmlMetadata = />[\s]+\[([A-Za-z ]+)\([''"]([\s\S]+)[''"]\)\]/
-  # match_index = result.index(mxmlMetadata)
-  # begin
-  #   if match_index
-  #     match = result.match(mxmlMetadata)
-  #     match[0].gsub!(/^>[\s]+/, "")
-  #     metadata_pieces = match[0].split("[")[1].split("]");
-  #     metadata_pieces.each do |metadata|
-  #     end
-  #     while metadata_pieces.length > 0
-  #       metadata_piece = metadata_pieces.shift
-  #       metadata_piece_formatted = "[" + metadata_piece + "]"
-  #       metadata_piece_formatted.gsub!('"', "'")
-  #       result = result.gsub("[" + metadata_piece + "]", '<fx:MAML metadata="' + metadata_piece_formatted + '" />');
-  #     end
-  #   end
-  #   match_index = result.index(mxmlMetadata)
-  # end while match_index
-  
   # Remove all whitespace outside of tags and between attributes, outside of CDATA
 
   result.gsub!(/\>[\s]+\</, "><")
@@ -269,8 +247,9 @@ def to_mxml(input_path, output_path)
   mxmlNode.attributes = []
   mxmlNode.cdata = ""
   mxmlNode.indent = 0
+  mxmlNode.children = []
   mxmlNodes = []
-  is_newline_separator = true # first object must always be first line
+  passed_newline_separator = true # first object must always be first line
 
   result = ""
   File.readlines( input_path, 'r' ).each do |line|
@@ -290,6 +269,9 @@ def to_mxml(input_path, output_path)
 
     # TO FIX: Shouldn't need three variations on the FB tools hack. Find a better way to survive
     # additional spaces within this tag
+    #
+    # NOTE: Does not currently support <fx:Script source="foo.as" />
+    #
     cdata_classes = [ "Script>", 'Script fb:purpose="styling">', 'Script fb:purpose="styling" >', 'Script  fb:purpose="styling" >', "Metadata>"]
 
     # if it's an empty line, signifies end of mxml node
@@ -300,11 +282,12 @@ def to_mxml(input_path, output_path)
         mxmlNode.attributes = []
         mxmlNode.cdata = ""
         mxmlNode.indent = 0
+        mxmlNode.children = []
       end
       
-      is_newline_separator = true
+      passed_newline_separator = true
     else
-      if is_newline_separator
+      if passed_newline_separator
         strippedLine = line.lstrip.rstrip
         if strippedLine.index(/\:/)
           tempArr = strippedLine.split(/\:/, 2)
@@ -337,7 +320,7 @@ def to_mxml(input_path, output_path)
         end
         # further lines before empty line are attributes
         # indicate that to the logic here
-        is_newline_separator = false
+        passed_newline_separator = false
       else
         # is attribute line
 
@@ -349,7 +332,7 @@ def to_mxml(input_path, output_path)
         # to nil if we're not careful. worth a warning though that it could be due to a parse
         # problem
         if !value
-          puts "WARNING: Property " + name.rstrip! + " evaluated to nil on file " + input_path + ". This may normal if you set to an empty string, which is what it will be assigned to."
+          puts "WARNING: Property " + name + " evaluated to nil on file " + input_path + ". This may normal if you set to an empty string, which is what it will be assigned to."
           value = ""
         end
         name.rstrip!
@@ -366,7 +349,7 @@ def to_mxml(input_path, output_path)
 
   # if file does not end with a new line, the above loop does not
   # push the final node it's building. we check that here
-  if(!is_newline_separator)
+  if(!passed_newline_separator)
     mxmlNodes.push(mxmlNode)
   end
 
@@ -392,26 +375,34 @@ def to_mxml(input_path, output_path)
       
       nodeToClose = nodesToCloseYet.pop();
       
-      if nodeToClose.indent >= mxmlNode.indent
+      if nodeToClose.indent > mxmlNode.indent
         # nodeToClose is a child of previous node close it first then 
         # continue through set of nodesToClose seeking parent
 
         # puts "Found child of previous node that needs closing: " + nodeToClose.klass + " before " + mxmlNode.klass
-        mxml_output += close_mxml_node(nodeToClose)
+        mxml_output += close_mxml_node(nodeToClose) #+ "\n"
 
       elsif nodeToClose.indent == mxmlNode.indent
         # nodeToClose is a sibling. close it first then 
         # continue through set of nodesToClose seeking parent
 
         # puts "Found sibling: " + nodeToClose.klass + " of " + mxmlNode.klass
-        mxml_output += close_mxml_node(nodeToClose)
+        mxml_output += close_mxml_node(nodeToClose) #+ "\n"
 
       else
         # the nodeToClose is the parent of the current node. not ready to close yet
         # we may now write out the opening node which we are currently iterating through
         
-        mxml_output += openingNode
+        # if this is its first child, we now know the parent won't self close.
+        # we close its opening node here
+        if nodeToClose.children.length == 0
+          mxml_output += ">"
+        end
+        mxml_output += "\n" + openingNode
+
         nodesToCloseYet.push(nodeToClose)
+        nodeToClose.children.push openingNode
+        mxmlNode.parent = nodeToClose
         parentNodeFound = true;
       end
     end
@@ -426,6 +417,10 @@ def to_mxml(input_path, output_path)
   while nodesToCloseYet.length > 0
     mxml_output += close_mxml_node(nodesToCloseYet.pop())
   end
+
+  # TO FIX: Newlines are sometimes doubling, related to closing opening brackets
+  # This is a workaround
+  mxml_output.gsub!(/\n\n/, "\n")
 
   write mxml_output, output_path
 
@@ -460,32 +455,36 @@ def slice_node(base_string, start_match, end_match, replace_with=nil)
 end
 
 def open_mxml_node(mxmlNode)
-  metadata = ""
   attributeString = ""
   cdata = mxmlNode.cdata
 
   mxmlNode.attributes.each do |attribute|
-    if attribute.name == "MXML_METADATA"
-      metadata = attribute.value;
-      metadata = metadata.rjust(metadata.length + mxmlNode.indent + $options.indent_size)
-      metadata += "\n"
-    else
-      attributeString += " " + attribute.name + "=\"" + attribute.value + "\""
-    end
+    attributeString += " " + attribute.name + "=\"" + attribute.value + "\""
   end
 
   opener = "<"
-  closer = ">"
+  # do not close opening node here, it may be self-closing
+  # we will append the close bracket in the close method below
+  closer = "" 
   openingNode = opener + mxmlNode.namespace + ":" + mxmlNode.klass
   openingNode = openingNode.rjust(openingNode.length + mxmlNode.indent);
 
-  total = openingNode + attributeString
-  total += closer + "\n" + metadata + cdata
+  total = openingNode + attributeString + closer
+  if cdata != ""
+    total += "\n" + metadata + cdata
+  end
   
   return total
 end
 
 def close_mxml_node(mxmlNode)
+  closingOutput = ""
+  if mxmlNode.children.length == 0
+    return " />\n"
+  else
+    closingOutput += ">"
+  end
+
   opener = "</"
   closer = ">"
 
@@ -535,6 +534,8 @@ class MxmlNode
   attr_accessor :attributes
   attr_accessor :value
   attr_accessor :cdata
+  attr_accessor :parent
+  attr_accessor :children
 end
 
 class MxmlNodeAttribute
