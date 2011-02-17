@@ -92,7 +92,7 @@ def to_maml(mxml_input)
   # Strip comments
   comments = slice_all_nodes(mxml_input, "<!--", "-->")
   if(comments.length > 0)
-    puts "WARNING: Stripped " + String(comments.length) + " comment(s) in output file of the format <!-- -->"
+    puts "WARNING: Stripped " + String(comments.length) + " comment(s) of the format <!-- --> in converting from " + $current_source_file
   end
 
   # Remove all whitespace outside of tags and between attributes, outside of CDATA
@@ -306,7 +306,7 @@ def to_mxml(maml_input)
             end
           end
         else
-          puts "WARNING: Found MXML node without namespace declaration. This is currently experimental support!"
+          puts "WARNING: Found MXML node without namespace declaration in " + $current_source_file + ". This is currently experimental support!"
           puts "Affected line: " + strippedLine
           mxmlNode.namespace = ""
           mxmlNode.klass = strippedLine
@@ -325,7 +325,7 @@ def to_mxml(maml_input)
         # to nil if we're not careful. worth a warning though that it could be due to a parse
         # problem
         if !value
-          puts "WARNING: Property '" + name.rstrip + "' evaluated to nil. This may be normal if you set to an empty string, which is what it will be assigned to."
+          puts "WARNING: Property '" + name.rstrip + "' evaluated to nil in file " + $current_source_file + " This may be normal if you set to an empty string, which is what it will be assigned to."
           value = ""
         end
         name.rstrip!
@@ -564,6 +564,7 @@ def read_file(file_path)
   File.readlines( file_path, 'r' ).each do |line|
     result += line
   end
+  $current_source_file = file_path
   return result
 end  
 
