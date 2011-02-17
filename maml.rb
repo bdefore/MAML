@@ -586,9 +586,9 @@ def convert_files(file_paths)
         converted_output = convert(read_file(file), to)
 
         if to == "MAML"
-          write(converted_output, $options.output_path + "/maml/" + file.gsub(".mxml", ".maml"))
+          write(converted_output, $options.output_path + "/" + file.gsub(".mxml", ".maml"))
         elsif to == "MXML"
-          write(converted_output, $options.output_path + "/mxml/" + file.gsub(".maml", ".mxml"))
+          write(converted_output, $options.output_path + "/" + file.gsub(".maml", ".mxml"))
         end
 
         fileArgString += file + " "
