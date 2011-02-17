@@ -574,24 +574,17 @@ def convert_files(file_paths)
     if $options.verbose 
       puts "Building #{file_paths.join(', ')}\n\nTOTAL FILES: #{file_paths.length}\n\n"
     end
-    fileArgString = ""
     file_paths.each do |file|
       if !File.directory?(file)
-        if file.upcase.index(/MXML/)
+        if file.upcase.index(/\.MXML/)
           to = "MAML"
-        elsif file.upcase.index(/MAML/)
+        elsif file.upcase.index(/\.MAML/)
           to = "MXML"
         end
 
         converted_output = convert(read_file(file), to)
 
-        if to == "MAML"
-          write(converted_output, $options.output_path + "/" + file.gsub(".mxml", ".maml"))
-        elsif to == "MXML"
-          write(converted_output, $options.output_path + "/" + file.gsub(".maml", ".mxml"))
-        end
-
-        fileArgString += file + " "
+        write(converted_output, $options.output_path + "/" + file.reverse.split(".")[1].reverse + "." + to.downcase)
       else
         # ignore, only pass in file names to convert, not dirs
       end
