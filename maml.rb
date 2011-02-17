@@ -56,7 +56,7 @@ OptionParser.new do |opts|
     $options.sleep_time = t
   end
   opts.on("--indent-size T", Integer, "How many spaces to indent per nested level") do |t|
-    $options.sleep_time = t
+    $options.indent_size = t
   end
   if($options.verbose)
     puts $options
@@ -610,7 +610,9 @@ else
 end
 
 if $options.watch_mode
-  puts "watching files: " + file_paths.join(", ")
+  if $options.verbose
+    puts "Watching files: " + file_paths.join(", ")
+  end
   stakeout_command = "ruby maml.rb " + file_paths.join(" ")
   files = build_mtimes_hash(file_paths)
   watch(stakeout_command, files, $options)

@@ -38,18 +38,24 @@ Command line switches:
 	-w, --watch-mode
 	Will check for when a file or the files within a directory specified in the input path have changed and
 	trigger conversions automatically to the output path.
-
-	-c, --callback
-	Run a terminal command after any successful conversion. Useful for build scripts in tandem with watch mode.
 	
 	-t, --sleep-time SECONDS
 	The interval at which watch mode will check for changed files. Default is 1.
+
+	-c, --callback
+	Run a terminal command after any successful conversion. Useful for build scripts in tandem with watch mode.
 
 	-d, --dry-run
 	Outputs to std_out indicating what will be written where
 	
 	-v, --verbose
 	Chattier messages.
+
+	-v, --verbose
+	Chattier messages.
+
+	--indent-size
+	How many spaces to indent per nested level. Default is 2.
 
 ## Example
 
