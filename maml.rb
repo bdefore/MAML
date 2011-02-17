@@ -43,6 +43,9 @@ OptionParser.new do |opts|
   opts.on("-o", "--output-path PATH", String) do |o|
     $options.output_path = o
   end
+  opts.on("-c", "--callback COMMAND", String) do |c|
+    $options.callback = c
+  end
   opts.on("-w", "--watch-mode") do |w|
     $options.watch_mode = w
   end
@@ -332,7 +335,7 @@ def to_mxml(input_path, output_path)
         # to nil if we're not careful. worth a warning though that it could be due to a parse
         # problem
         if !value
-          puts "WARNING: Property " + name + " evaluated to nil on file " + input_path + ". This may normal if you set to an empty string, which is what it will be assigned to."
+          puts "WARNING: Property '" + name.rstrip + "' evaluated to nil on file " + input_path + ". This may normal if you set to an empty string, which is what it will be assigned to."
           value = ""
         end
         name.rstrip!
@@ -544,7 +547,9 @@ class MxmlNodeAttribute
 end
 
 def convert(input_path)
-  puts "Opening file at " + input_path
+  if $options.verbose
+    puts "Opening file at " + input_path
+  end
   if input_path.upcase.index(/MXML/)
     to_maml input_path, $options.output_path + "/maml/" + input_path.gsub(".mxml", ".maml")
   elsif input_path.upcase.index(/MAML/)
@@ -552,22 +557,25 @@ def convert(input_path)
   end
 end
 
-def convert_files(files)
-  if files
+def convert_files(file_paths)
+  if file_paths
+    beginning_time = Time.now
     if $options.verbose 
-      puts "Building #{files.keys.join(', ')}\n\nTOTAL FILES: #{files.keys.length}\n\n"
+      puts "Building #{file_paths.join(', ')}\n\nTOTAL FILES: #{file_paths.length}\n\n"
     end
     fileArgString = ""
-    files.each do |file|
+    file_paths.each do |file|
       # only pass in file names to convert, not dirs
-      if !File.directory?(file[0])
-        convert(file[0])
-        fileArgString += file[0] + " "
+      if !File.directory?(file)
+        convert(file)
+        fileArgString += file + " "
       end
     end
-    if $options.watch_mode
-      stakeout_command = "ruby maml.rb " + fileArgString
-      watch(stakeout_command, files, $options)
+    end_time = Time.now
+    puts "Completed in #{(end_time - beginning_time)*1000} milliseconds"
+
+    if $options.callback
+      exec($options.callback) if fork.nil?
     end
   else
     puts "================================================="
@@ -585,7 +593,7 @@ def build_mtimes_hash(file_paths)
   }
   files
 end
-
+   
 input_path = ARGV.pop;
 if !input_path
   puts "================================================="
@@ -601,9 +609,11 @@ else
   file_paths = [ input_path ]
 end
 
-files = build_mtimes_hash(file_paths)
-
-beginning_time = Time.now
-convert_files(files)
-end_time = Time.now
-puts "Completed in #{(end_time - beginning_time)*1000} milliseconds"
+if $options.watch_mode
+  puts "watching files: " + file_paths.join(", ")
+  stakeout_command = "ruby maml.rb " + file_paths.join(" ")
+  files = build_mtimes_hash(file_paths)
+  watch(stakeout_command, files, $options)
+else
+  convert_files(file_paths)
+end

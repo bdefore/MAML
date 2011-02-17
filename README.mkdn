@@ -22,10 +22,13 @@ MAML is MXML in the spirit of YAML.
 	Rebuild my dinosaur into a directory named Gondwanaland on my Desktop:
 	ruby maml.rb -w -o ~/Desktop/Gondwanaland test.maml
 
-	Rebuild a dinosaur any time I save a MAML in a specified directory with spaces, recursively:
+	Watch a MAML directory, rebuild its corresponding dinosaur whenever I save:
 	ruby maml.rb -w ~/Documents/Flex\ Builder\ 3/My\ Flex\ Project/src
 
-	Command line switches:
+	Watch a MAML directory, rebuild dinosaurs to a path whenever I save, and run an Ant task afterwards
+	ruby maml.rb -w ~/Documents/Code/PROJECT_NAME/maml -o ~/Documents/Code/PROJECT_NAME/src -c 'ant -f ~/Documents/Code/PROJECT_NAME/build.xml'
+
+Command line switches:
 	
 	-o, --output-path PATH
 	Specify where you want generated files to go. Subdirectories named 'maml' and 'mxml' will be created
@@ -35,6 +38,9 @@ MAML is MXML in the spirit of YAML.
 	-w, --watch-mode
 	Will check for when a file or the files within a directory specified in the input path have changed and
 	trigger conversions automatically to the output path.
+
+	-c, --callback
+	Run a terminal command after any successful conversion. Useful for build scripts in tandem with watch mode.
 	
 	-t, --sleep-time SECONDS
 	The interval at which watch mode will check for changed files. Default is 1.

@@ -179,13 +179,15 @@ def watch(command, files, options)
       with_exclusive_lock_if_synchronous(options.synchronous, lock_obj) do
         files[changed_file] = File.mtime(changed_file)
         puts "=> #{changed_file} changed"
-        convert(changed_file)
       end
     end
 
     if(changed_files.length > 0)
       message = changed_files.join(", ")
       Notifier.notify_pass(message)
+      
+      # Call MAML
+      convert_files changed_files
     else
       puts "No changes detected. Checking again in " + String($options.sleep_time) + " seconds..."
     end
