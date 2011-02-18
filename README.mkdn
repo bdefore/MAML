@@ -161,7 +161,7 @@ Command line switches:
 
 Would convert to MAML:
 
-	s:Application
+	Application
 	xmlns:fx         = http://ns.adobe.com/mxml/2009
 	xmlns:mx         = library://ns.adobe.com/flex/mx
 	xmlns:s          = library://ns.adobe.com/flex/spark
@@ -173,17 +173,17 @@ Would convert to MAML:
 
 	  s:states
 
-	    s:State
+	    State
 	    name = normal
 
-	    s:State
+	    State
 	    name = disabled
 
-	  s:SkinnableContainer
+	  SkinnableContainer
 	  width  = 100%
 	  height = 100%
 
-	    s:Label
+	    Label
 	    id = label1
 
 	    <fx:Script>
@@ -216,53 +216,53 @@ Would convert to MAML:
 	    ]]>
 	              </fx:Script>
 
-	    s:VGroup
+	    VGroup
 	    width  = 100%
 	    height = 100%
 
-	      s:Label
+	      Label
 	      id = whatAFineLabel
 
-	      s:HGroup
+	      HGroup
 	      width  = 100%
 	      height = 50
 
-	        s:Label
+	        Label
 	        text = Fwee
 
-	        s:Label
+	        Label
 	        text = Fwei
 
-	        s:Label
+	        Label
 	        text = Fwo
 
-	        s:Label
+	        Label
 	        text = Fwum
 
-	        fx:String
+	        String
 	        id              = nodeWithValue
 	        mxml_node_value = A node with a value
 
-	        mx:DataGrid
+	        DataGrid
 	        id           = dg
 	        dataProvider = {arrayCollectionToBind}
 	        width        = 100%
 	        height       = 100%
 	        change       = onChange(event)
 
-	      mx:DataGrid
+	      DataGrid
 	      id = tunnelVision
 
 	        mx:columns
 
-	          mx:DataGridColumn
+	          DataGridColumn
 	          id = giveMeTunnelVision
 
 	            mx:itemRenderer
 
 	              fx:Component
 
-	                mx:Label
+	                Label
 
 	                  <fx:Script>
 	                                    <![CDATA[
@@ -278,28 +278,28 @@ Would convert to MAML:
 
 Which would convert back to MXML (effectively a tidy script):
 
-	<s:Application
-	   xmlns:fx="http://ns.adobe.com/mxml/2009"
-	   xmlns:mx="library://ns.adobe.com/flex/mx"
-	   xmlns:s="library://ns.adobe.com/flex/spark"
-	   creationComplete="onCreationComplete()">
+	<mx:Application
+	  xmlns:fx="http://ns.adobe.com/mxml/2009"
+	  xmlns:mx="library://ns.adobe.com/flex/mx"
+	  xmlns:s="library://ns.adobe.com/flex/spark"
+	  creationComplete="onCreationComplete()">
 	  <fx:Metadata>
 	      [HostComponent("spark.components.List")]
 	  </fx:Metadata>
 
 	  <s:states>
-	    <s:State
-	       name="normal" />
+	    <mx:State
+	      name="normal" />
 
-	    <s:State
-	       name="disabled" />
+	    <mx:State
+	      name="disabled" />
 	  </s:states>
 
 	  <s:SkinnableContainer
-	     width="100%"
-	     height="100%">
-	    <s:Label
-	       id="label1" />
+	    width="100%"
+	    height="100%">
+	    <mx:Label
+	      id="label1" />
 
 	    <fx:Script>
 	    <![CDATA[
@@ -332,42 +332,42 @@ Which would convert back to MXML (effectively a tidy script):
 	    </fx:Script>
 
 	    <s:VGroup
-	       width="100%"
-	       height="100%">
-	      <s:Label
-	         id="whatAFineLabel" />
+	      width="100%"
+	      height="100%">
+	      <mx:Label
+	        id="whatAFineLabel" />
 
 	      <s:HGroup
-	         width="100%"
-	         height="50">
-	        <s:Label
-	           text="Fwee" />
+	        width="100%"
+	        height="50">
+	        <mx:Label
+	          text="Fwee" />
 
-	        <s:Label
-	           text="Fwei" />
+	        <mx:Label
+	          text="Fwei" />
 
-	        <s:Label
-	           text="Fwo" />
+	        <mx:Label
+	          text="Fwo" />
 
-	        <s:Label
-	           text="Fwum" />
+	        <mx:Label
+	          text="Fwum" />
 
-	        <fx:String
-	            id="nodeWithValue"        >A node with a value</fx:String>
+	        <mx:String
+	          id="nodeWithValue"        >A node with a value</mx:String>
 
 	        <mx:DataGrid
-	            id="dg"
-	            dataProvider="{arrayCollectionToBind}"
-	            width="100%"
-	            height="100%"
-	            change="onChange(event)" />
+	          id="dg"
+	          dataProvider="{arrayCollectionToBind}"
+	          width="100%"
+	          height="100%"
+	          change="onChange(event)" />
 	      </s:HGroup>
 
 	      <mx:DataGrid
-	          id="tunnelVision">
+	        id="tunnelVision">
 	        <mx:columns>
 	          <mx:DataGridColumn
-	              id="giveMeTunnelVision">
+	            id="giveMeTunnelVision">
 	            <mx:itemRenderer>
 	              <fx:Component>
 	                <mx:Label>
@@ -390,7 +390,7 @@ Which would convert back to MXML (effectively a tidy script):
 	      </mx:DataGrid>
 	    </s:VGroup>
 	  </s:SkinnableContainer>
-	</s:Application>
+	</mx:Application>
 
 ## Known Issues
 
