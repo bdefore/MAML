@@ -201,9 +201,10 @@ def to_maml(mxml_input)
       nsAndKlass = twoHalves[0]
       
       # determine if namespacing is necessary, check against known list
-      klass = nsAndKlass.index(":") ? nsAndKlass.split(":")[1] : nsAndKlass
-      ns = nsAndKlass.index(":") ? $classpaths[klass] ? "" : nsAndKlass.split(":")[0] : ""
-      nsAndKlass = ns == "" ? klass : ns + ":" + klass
+      # disabled for now, need way of resolving conflicts
+      # klass = nsAndKlass.index(":") ? nsAndKlass.split(":")[1] : nsAndKlass
+      # ns = nsAndKlass.index(":") ? $classpaths[klass] ? "" : nsAndKlass.split(":")[0] : ""
+      # nsAndKlass = ns == "" ? klass : ns + ":" + klass
 
       # pad with indentation at this level
       nsAndKlass = nsAndKlass.rjust(nsAndKlass.length + (indents*$options.indent_size))
@@ -263,12 +264,14 @@ def to_maml(mxml_input)
 end
 
 def namespace_from_node(mxmlNode)
-  if mxmlNode.klass
-    classpath = $classpaths[mxmlNode.klass]
-    if classpath
-      return classpath.prefix
-    end
-  end
+  # Disabled until we find a better way to resolve conflicts
+  #
+  # if mxmlNode.klass
+  #   classpath = $classpaths[mxmlNode.klass]
+  #   if classpath
+  #     return classpath.prefix
+  #   end
+  # end
   return mxmlNode.namespace + ":"
 end
 

@@ -44,10 +44,16 @@ $classpaths = Hash.new()
 
 spark_manifest_xml = REXML::Document.new(read_file('manifests/frameworks/spark-manifest.xml'))
 spark_manifest_xml.elements.each('componentPackage/component') do |ele|
-   $classpaths[ele.attributes['id']] = OpenStruct.new(:classpath => ele.attributes['class'], :prefix => "s:")
+  # if($classpaths[ele.attributes['id']])
+  #   puts "WARNING: More than one class found for " + ele.attributes['id'] + " in the namespace table."
+  # end
+  $classpaths[ele.attributes['id']] = OpenStruct.new(:classpath => ele.attributes['class'], :prefix => "s:")
 end
 
 mx_manifest_xml = REXML::Document.new(read_file('manifests/frameworks/mxml-manifest.xml'))
 mx_manifest_xml.elements.each('componentPackage/component') do |ele|
-   $classpaths[ele.attributes['id']] = OpenStruct.new(:classpath => ele.attributes['class'], :prefix => "mx:")
+  # if($classpaths[ele.attributes['id']])
+  #   puts "WARNING: More than one class found for " + ele.attributes['id'] + " in the namespace table."
+  # end
+  $classpaths[ele.attributes['id']] = OpenStruct.new(:classpath => ele.attributes['class'], :prefix => "mx:")
 end
