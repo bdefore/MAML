@@ -31,6 +31,7 @@
 require 'optparse'
 require 'ostruct'
 require 'fileutils.rb'
+require 'namespacer.rb'
 require 'rstakeout.rb'
 
 $options = OpenStruct.new(:verbose => false, :output_path => "maml_generated", :watch_mode => false, :sleep_time => 1, :synchronous => false, :indent_size => 2, :dry_run => false, :callback => nil, :mxml_format_style => "LOOSE")
@@ -197,12 +198,17 @@ def to_maml(mxml_input)
 
       # split between class name and attributes
       twoHalves = mxml_node_string.split(" ", 2)
-      klass = twoHalves[0]
+      nsAndKlass = twoHalves[0]
+      
+      # determine if namespacing is necessary, check against known list
+      klass = nsAndKlass.index(":") ? nsAndKlass.split(":")[1] : nsAndKlass
+      ns = nsAndKlass.index(":") ? $classpaths[klass] ? "" : nsAndKlass.split(":")[0] : ""
+      nsAndKlass = ns == "" ? klass : ns + ":" + klass
 
       # pad with indentation at this level
-      klass = klass.rjust(klass.length + (indents*$options.indent_size))
+      nsAndKlass = nsAndKlass.rjust(nsAndKlass.length + (indents*$options.indent_size))
     
-      mxml_node_string_with_attrs = klass;
+      mxml_node_string_with_attrs = nsAndKlass;
 
       # find largest attribute name in order to pad correctly
       largestAttrNameLength = 0;
@@ -256,6 +262,16 @@ def to_maml(mxml_input)
 
 end
 
+def namespace_from_node(mxmlNode)
+  if mxmlNode.klass
+    classpath = $classpaths[mxmlNode.klass]
+    if classpath
+      return classpath.prefix
+    end
+  end
+  return mxmlNode.namespace + ":"
+end
+
 def to_mxml(maml_input)
 
   # TO FIX: When two empty lines are in order, parsing breaks
@@ -298,10 +314,16 @@ def to_mxml(maml_input)
         strippedLine = line.lstrip.rstrip
         if strippedLine[0].chr == "#"
           mxmlNode.comment = strippedLine[1..strippedLine.length]
-        elsif strippedLine.index(/\:/)
+        else
           tempArr = strippedLine.split(/\:/, 2)
-          mxmlNode.namespace = tempArr[0]
-          mxmlNode.klass = tempArr[1]
+          if tempArr.length > 1
+            mxmlNode.namespace = tempArr[0]
+            mxmlNode.klass = tempArr[1]
+          else
+            mxmlNode.namespace = ""
+            mxmlNode.klass = tempArr[0]
+          end
+          
           # Inelegant. Fix?
           # CDATA nodes must maintain bracket structure because a whitespace parser knows not when 
           # they terminate otherwise. As such, this workaround prevents duplicate brackets being
@@ -318,7 +340,7 @@ def to_mxml(maml_input)
                 mxmlNode.klass.slice!(mxmlNode.klass.length - 1) # trailing > in case of <fx:Script fb:purpose="styling">
               end
 
-              nsPlusClass = "</" + mxmlNode.namespace + ":" + class_name_without_attributes
+              nsPlusClass = "</" + namespace_from_node(mxmlNode) + class_name_without_attributes
 
               line = lines.shift + "\n"
               while !line.index nsPlusClass
@@ -327,11 +349,6 @@ def to_mxml(maml_input)
               end
             end
           end
-        else
-          puts "WARNING: Found MXML node without namespace declaration in " + $current_source_file + ". This is currently experimental support!"
-          puts "Affected line: " + strippedLine
-          mxmlNode.namespace = ""
-          mxmlNode.klass = strippedLine
         end
         # further lines before empty line are attributes
         # indicate that to the logic here
@@ -501,7 +518,7 @@ def open_mxml_node(mxmlNode)
   closer = mxmlNode.cdata == "" ? "" : ">"
   
   openingNode = opener
-  openingNode += mxmlNode.comment ? mxmlNode.comment : mxmlNode.namespace + ":" + mxmlNode.klass
+  openingNode += mxmlNode.comment ? mxmlNode.comment : namespace_from_node(mxmlNode) + mxmlNode.klass
   openingNode = openingNode.rjust(openingNode.length + mxmlNode.indent);
 
   total = openingNode + attributeString + closer
@@ -530,7 +547,7 @@ def close_mxml_node(mxmlNode)
 
   klass = mxmlNode.klass.split(" ")[0] # for the case of <fx:Script fb:purpose="styling">
 
-  closingOutput += opener + mxmlNode.namespace + ":" + klass + closer
+  closingOutput += opener + namespace_from_node(mxmlNode) + klass + closer
   closingOutput = closingOutput.rjust(closingOutput.length + mxmlNode.indent) + "\n\n"
   return closingOutput
 end
