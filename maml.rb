@@ -89,11 +89,6 @@ def to_maml(mxml_input)
   
   # Strip off <?xml version="1.0" encoding="utf-8"?>
   declarations = slice_node(mxml_input, "<?", "?>")
-  # Strip comments
-  comments = slice_all_nodes(mxml_input, "<!--", "-->")
-  if(comments.length > 0)
-    puts "WARNING: Stripped " + String(comments.length) + " comment(s) of the format <!-- --> in converting from " + $current_source_file
-  end
 
   # Remove all whitespace outside of tags and between attributes, outside of CDATA
 
@@ -110,23 +105,30 @@ def to_maml(mxml_input)
   indents = 0
   maml_output = ""
   mxml_input = mxml_input[1..mxml_input.length]
-  mxml_input = mxml_input.split(/\>\</)
+  mxml_input = mxml_input.split(/\>[\s]?\</)
 
   begin
     mxml_node_string = mxml_input.shift
-    
+
+    # put the split target back on
+    mxml_node_string = "<" + mxml_node_string + ">"
+
+    openingCommentIndicator = /^([\s]+)?<!--/
+    closingCommentIndicator = /-->([\s]+)?$/
+
+    is_comment = mxml_node_string.index(openingCommentIndicator)
+
     # For those MXML nodes that have legitmate values rather than attributes, assign them to the value
     # property.
     #
     # i.e. <mx:String>Helvetica</mx:String>
-    if mxml_node_string.split(/</).length > 1
-      kibblesAndBits = mxml_node_string.split(/</).join("☠").split(/>/).join("☠").split("☠")
+    if !is_comment && mxml_node_string.split(/</).length > 2
+      delimiter = "☠"
+      kibblesAndBits = mxml_node_string.split(/</).join(delimiter).split(/>/).join(delimiter).split(delimiter)
+      kibblesAndBits.shift
       mxml_node_string = kibblesAndBits[0] + ' mxml_node_value="' + kibblesAndBits[1] + '" /'
     end
     
-    # put the split target back on
-    mxml_node_string = "<" + mxml_node_string + ">\n"
-
     if mxml_node_string.index(script_indicator)
 
       script = scriptNodes.shift
@@ -159,6 +161,20 @@ def to_maml(mxml_input)
       tag += "\n"
       maml_output += tag
 
+    elsif is_comment
+      # TO FIX: Does not account for code within comments
+      # We have split upon "><" and so this mxml_node_string may
+      # not include the entire comment
+      mxml_node_string.gsub!(openingCommentIndicator, "\\1#")
+      closes = mxml_node_string.index(closingCommentIndicator)
+      while !closes
+        mxml_node_string += "<" + mxml_input.shift + ">"
+        closes = mxml_node_string.index("-->")
+      end
+      mxml_node_string.gsub!(closingCommentIndicator, "")
+      mxml_node_string = mxml_node_string.rjust(mxml_node_string.length + (indents*$options.indent_size))
+      maml_output += mxml_node_string + "\n\n"
+
     else
       # determine kind of node
       selfClosingNode = mxml_node_string.index(/\/>/)
@@ -182,7 +198,6 @@ def to_maml(mxml_input)
       # split between class name and attributes
       twoHalves = mxml_node_string.split(" ", 2)
       klass = twoHalves[0]
-      attrNameValuePairs = twoHalves[1].split("\"");
 
       # pad with indentation at this level
       klass = klass.rjust(klass.length + (indents*$options.indent_size))
@@ -192,28 +207,31 @@ def to_maml(mxml_input)
       # find largest attribute name in order to pad correctly
       largestAttrNameLength = 0;
 
-      attrs = []
-      while attrNameValuePairs.length > 0
-        name = attrNameValuePairs.shift()
-        value = attrNameValuePairs.shift()
-        if(name && value)
-          name = name.lstrip
-          largestAttrNameLength = [ name.index(/\=/), largestAttrNameLength ].max;
-          attrs.push(name + value)
+      if(twoHalves.length > 1)
+        attrNameValuePairs = twoHalves[1].split("\"");
+        attrs = []
+        while attrNameValuePairs.length > 0
+          name = attrNameValuePairs.shift()
+          value = attrNameValuePairs.shift()
+          if(name && value)
+            name = name.lstrip
+            largestAttrNameLength = [ name.index(/\=/), largestAttrNameLength ].max;
+            attrs.push(name + value)
+          end
+        end
+
+        attrs.each do |attr|
+          # - Outdent attribute values to the position just right of the longest named attribute
+          attrHalves = attr.split(" = ");
+          attrName = attrHalves[0]
+          attrValue = attrHalves[1] || ""
+          toPad = largestAttrNameLength - attrName.length - 1
+          paddedAttr = attrName.ljust(attrName.length + toPad) + " = " + attrValue;
+          indentedAttr = paddedAttr.rjust(paddedAttr.length + (indents * $options.indent_size))
+          mxml_node_string_with_attrs += "\n" + indentedAttr
         end
       end
-
-      attrs.each do |attr|
-        # - Outdent attribute values to the position just right of the longest named attribute
-        attrHalves = attr.split(" = ");
-        attrName = attrHalves[0]
-        attrValue = attrHalves[1] || ""
-        toPad = largestAttrNameLength - attrName.length - 1
-        paddedAttr = attrName.ljust(attrName.length + toPad) + " = " + attrValue;
-        indentedAttr = paddedAttr.rjust(paddedAttr.length + (indents * $options.indent_size))
-        mxml_node_string_with_attrs += "\n" + indentedAttr
-      end
-  
+      
       mxml_node_string_with_attrs += "\n\n"
 
       # append to accumulating string, ixnay the closing nodes for this formatting style
@@ -260,16 +278,12 @@ def to_mxml(maml_input)
       mxmlNode.indent = whitespace[0].length
     end
 
-    # TO FIX: Shouldn't need three variations on the FB tools hack. Find a better way to survive
-    # additional spaces within this tag
-    #
     # NOTE: Does not currently support <fx:Script source="foo.as" />
-    #
-    cdata_classes = [ "Script>", 'Script fb:purpose="styling">', 'Script fb:purpose="styling" >', 'Script  fb:purpose="styling" >', "Metadata>"]
+    cdata_classes = [ "Script", "Metadata"]
 
     # if it's an empty line, signifies end of mxml node
     if line.length == 0
-      if mxmlNode.klass
+      if mxmlNode.klass || mxmlNode.comment
         mxmlNodes.push(mxmlNode)
         mxmlNode = MxmlNode.new
         mxmlNode.attributes = []
@@ -282,7 +296,9 @@ def to_mxml(maml_input)
     else
       if passed_newline_separator
         strippedLine = line.lstrip.rstrip
-        if strippedLine.index(/\:/)
+        if strippedLine[0].chr == "#"
+          mxmlNode.comment = strippedLine[1..strippedLine.length]
+        elsif strippedLine.index(/\:/)
           tempArr = strippedLine.split(/\:/, 2)
           mxmlNode.namespace = tempArr[0]
           mxmlNode.klass = tempArr[1]
@@ -291,15 +307,21 @@ def to_mxml(maml_input)
           # they terminate otherwise. As such, this workaround prevents duplicate brackets being
           # thrown on them
           cdata_classes.each do |cdata_class|
-            if mxmlNode.klass == cdata_class
+
+            hasAttribute = mxmlNode.klass.index(" ")
+            class_name_without_attributes = mxmlNode.klass.index(" ") ? mxmlNode.klass.split(" ")[0] : mxmlNode.klass
+            class_name_without_attributes.gsub!(/>/, "")
+
+            if class_name_without_attributes == cdata_class
               mxmlNode.namespace.slice!(0) # leading <
-              mxmlNode.klass.slice!(mxmlNode.klass.length - 1) # trailing >
+              if hasAttribute 
+                mxmlNode.klass.slice!(mxmlNode.klass.length - 1) # trailing > in case of <fx:Script fb:purpose="styling">
+              end
 
-              # Sad sad little hack around an Adobe hack
-              since_fb_styling_closes_without_attribute = cdata_class.split(" ")[0]
+              nsPlusClass = "</" + mxmlNode.namespace + ":" + class_name_without_attributes
 
-              line = lines.shift
-              while !line.index since_fb_styling_closes_without_attribute
+              line = lines.shift + "\n"
+              while !line.index nsPlusClass
                 mxmlNode.cdata += line
                 line = lines.shift + "\n"
               end
@@ -316,7 +338,6 @@ def to_mxml(maml_input)
         passed_newline_separator = false
       else
         # is attribute line
-
         line.strip!
         nameValuePair = line.split("=");
         name = nameValuePair[0]
@@ -331,11 +352,15 @@ def to_mxml(maml_input)
         name.rstrip!
         value.lstrip!
 
-        attribute = MxmlNodeAttribute.new
-        attribute.name = name
-        attribute.value = value
+        if name == "mxml_node_value"
+          mxmlNode.value = value
+        else
+          attribute = MxmlNodeAttribute.new
+          attribute.name = name
+          attribute.value = value
         
-        mxmlNode.attributes.push( attribute )
+          mxmlNode.attributes.push( attribute )
+        end
       end
     end
   end
@@ -349,13 +374,23 @@ def to_mxml(maml_input)
   # parse into mxml bracket notation
   mxml_output = ""
   nodesToCloseYet = []
+  
+  # this is a workaround so that files with comment blocks at the 
+  # start do not mess up the container node
+  begin
+    containerNode = mxmlNodes.shift
+    if(containerNode.comment)
+      mxml_output += open_mxml_node(containerNode)
+      mxml_output += close_mxml_node(containerNode)
+      mxml_output += "\n"
+    end
+  end while containerNode.comment
 
   # we first pop off the mother node since she has no indentation
   # and no children that would trigger her to output her open node
-  containerNode = mxmlNodes.shift()
   if(containerNode)
     containerNode.indent = 0
-    mxml_output = open_mxml_node(containerNode)
+    mxml_output += open_mxml_node(containerNode)
     nodesToCloseYet.push(containerNode)
   end
 
@@ -459,35 +494,44 @@ def open_mxml_node(mxmlNode)
     end
   end
 
-  opener = "<"
+  opener = mxmlNode.comment ? "<!--" : "<"
   # do not close opening node here, it may be self-closing
   # we will append the close bracket in the close method below
   # cdata nodes must never self-close, however
   closer = mxmlNode.cdata == "" ? "" : ">"
-  openingNode = opener + mxmlNode.namespace + ":" + mxmlNode.klass
+  
+  openingNode = opener
+  openingNode += mxmlNode.comment ? mxmlNode.comment : mxmlNode.namespace + ":" + mxmlNode.klass
   openingNode = openingNode.rjust(openingNode.length + mxmlNode.indent);
 
   total = openingNode + attributeString + closer
   if cdata != ""
     total += "\n" + cdata
   end
-  
+
   return total
 end
 
 def close_mxml_node(mxmlNode)
   closingOutput = ""
-  if mxmlNode.children.length == 0 && mxmlNode.cdata == ""
-    return " />\n"
-  else
-    closingOutput += ">"
+  
+  if mxmlNode.comment
+    return "-->\n\n"
+  elsif mxmlNode.children.length == 0 && mxmlNode.cdata == "" && mxmlNode.value == nil
+    return " />\n\n"
+  end
+
+  if mxmlNode.value
+    closingOutput += ">" + mxmlNode.value
   end
 
   opener = "</"
   closer = ">"
 
-  closingOutput = opener + mxmlNode.namespace + ":" + mxmlNode.klass + closer
-  closingOutput = closingOutput.rjust(closingOutput.length + mxmlNode.indent) + "\n"
+  klass = mxmlNode.klass.split(" ")[0] # for the case of <fx:Script fb:purpose="styling">
+
+  closingOutput += opener + mxmlNode.namespace + ":" + klass + closer
+  closingOutput = closingOutput.rjust(closingOutput.length + mxmlNode.indent) + "\n\n"
   return closingOutput
 end
 
@@ -534,6 +578,7 @@ class MxmlNode
   attr_accessor :cdata
   attr_accessor :parent
   attr_accessor :children
+  attr_accessor :comment
 end
 
 class MxmlNodeAttribute

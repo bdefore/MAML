@@ -10,14 +10,14 @@ MAML is MXML in the spirit of YAML.
     
 **WARNING** Use at your own discretion, this is experimental hobby code and should not be relied on for building rockets to space. Check in your code before you mess with this.
 
-	Compile a MAML (behind the scenes, convert to a dinosaur, then compile that)
-	ruby mamlc.rb furry.maml
-
 	From MXML, generate a creature that nurses its young from teats:
 	ruby maml.rb test.mxml
 
 	From MAML, generate a dinosaur:
 	ruby maml.rb test.maml
+
+	Compile a MAML (behind the scenes, convert to a dinosaur, then compile that)
+	ruby mamlc.rb furry.maml
 	
 	Rebuild my dinosaur into a directory named Gondwanaland on my Desktop:
 	ruby maml.rb -o ~/Desktop/Gondwanaland test.maml
@@ -49,7 +49,7 @@ Command line switches:
 	Run a terminal command after any successful conversion. Useful for build scripts in tandem with watch mode.
 
 	-d, --dry-run
-	Outputs to std_out indicating what will be written where
+	Outputs to std_out indicating what will be written where.
 	
 	-v, --verbose
 	Chattier messages.
@@ -208,6 +208,8 @@ Would convert to MAML:
 	      ]]>
 	    </fx:Script>
 
+	    # Can I have another tag sir? 
+
 	    <fx:Script>
 	    <![CDATA[
 	    // fweeeeeeee
@@ -237,39 +239,42 @@ Would convert to MAML:
 	        s:Label
 	        text = Fwum
 
+	        fx:String
+	        id              = nodeWithValue
+	        mxml_node_value = A node with a value
+
+	        mx:DataGrid
+	        id           = dg
+	        dataProvider = {arrayCollectionToBind}
+	        width        = 100%
+	        height       = 100%
+	        change       = onChange(event)
+
 	      mx:DataGrid
-	      id           = dg
-	      dataProvider = {arrayCollectionToBind}
-	      width        = 100%
-	      height       = 100%
-	      change       = onChange(event)
+	      id = tunnelVision
 
-	    mx:DataGrid
-	    id = tunnelVision
+	        mx:columns
 
-	      mx:columns
+	          mx:DataGridColumn
+	          id = giveMeTunnelVision
 
-	        mx:DataGridColumn
-	        id = giveMeTunnelVision
+	            mx:itemRenderer
 
-	          mx:itemRenderer
+	              fx:Component
 
-	            fx:Component
+	                mx:Label
 
-	              mx:Label
-
-	                <fx:Script>
-	                                  <![CDATA[
-	                                    override public function set data(value:Object):void
-	                                    {      
-	                                      if(value != null)
-	                                      {
-	                                        super.data = value;
+	                  <fx:Script>
+	                                    <![CDATA[
+	                                      override public function set data(value:Object):void
+	                                      {      
+	                                        if(value != null)
+	                                        {
+	                                          super.data = value;
+	                                        }
 	                                      }
-	                                    }
-	                                  ]]>
-	                                </fx:Script>
-
+	                                    ]]>
+	                                  </fx:Script>
 
 Which would convert back to MXML (effectively a tidy script):
 
@@ -279,20 +284,26 @@ Which would convert back to MXML (effectively a tidy script):
 	   xmlns:s="library://ns.adobe.com/flex/spark"
 	   creationComplete="onCreationComplete()">
 	  <fx:Metadata>
-	      [HostComponent("spark.components.List")]  </fx:Metadata>
+	      [HostComponent("spark.components.List")]
+	  </fx:Metadata>
+
 	  <s:states>
 	    <s:State
 	       name="normal" />
+
 	    <s:State
 	       name="disabled" />
 	  </s:states>
+
 	  <s:SkinnableContainer
 	     width="100%"
 	     height="100%">
 	    <s:Label
 	       id="label1" />
+
 	    <fx:Script>
-	    <![CDATA[    
+	    <![CDATA[
+    
 	        import flash.events.Event;
 	        import mx.collections.ArrayCollection;
         
@@ -311,64 +322,79 @@ Which would convert back to MXML (effectively a tidy script):
     
 	      ]]>
 	    </fx:Script>
+
+	    <!-- Can I have another tag sir?-->
+
 	    <fx:Script>
-	    <![CDATA[    // fweeeeeeee
+	    <![CDATA[
+	    // fweeeeeeee
 	    ]]>
 	    </fx:Script>
+
 	    <s:VGroup
 	       width="100%"
 	       height="100%">
 	      <s:Label
 	         id="whatAFineLabel" />
+
 	      <s:HGroup
 	         width="100%"
 	         height="50">
 	        <s:Label
 	           text="Fwee" />
+
 	        <s:Label
 	           text="Fwei" />
+
 	        <s:Label
 	           text="Fwo" />
+
 	        <s:Label
 	           text="Fwum" />
+
+	        <fx:String
+	            id="nodeWithValue"        >A node with a value</fx:String>
+
+	        <mx:DataGrid
+	            id="dg"
+	            dataProvider="{arrayCollectionToBind}"
+	            width="100%"
+	            height="100%"
+	            change="onChange(event)" />
 	      </s:HGroup>
+
 	      <mx:DataGrid
-	          id="dg"
-	          dataProvider="{arrayCollectionToBind}"
-	          width="100%"
-	          height="100%"
-	          change="onChange(event)" />
-	    </s:VGroup>
-	    <mx:DataGrid
-	        id="tunnelVision">
-	      <mx:columns>
-	        <mx:DataGridColumn
-	            id="giveMeTunnelVision">
-	          <mx:itemRenderer>
-	            <fx:Component>
-	              <mx:Label>
-	                <fx:Script>
-	                                  <![CDATA[                                    override public function set data(value:Object):void
-	                                    {      
-	                                      if(value != null)
-	                                      {
-	                                        super.data = value;
+	          id="tunnelVision">
+	        <mx:columns>
+	          <mx:DataGridColumn
+	              id="giveMeTunnelVision">
+	            <mx:itemRenderer>
+	              <fx:Component>
+	                <mx:Label>
+	                  <fx:Script>
+	                                    <![CDATA[
+	                                      override public function set data(value:Object):void
+	                                      {      
+	                                        if(value != null)
+	                                        {
+	                                          super.data = value;
+	                                        }
 	                                      }
-	                                    }
-	                                  ]]>
-	                </fx:Script>
-	              </mx:Label>
-	            </fx:Component>
-	          </mx:itemRenderer>
-	        </mx:DataGridColumn>
-	      </mx:columns>
-	    </mx:DataGrid>
+	                                    ]]>
+	                  </fx:Script>
+	                </mx:Label>
+	              </fx:Component>
+	            </mx:itemRenderer>
+	          </mx:DataGridColumn>
+	        </mx:columns>
+	      </mx:DataGrid>
+	    </s:VGroup>
 	  </s:SkinnableContainer>
 	</s:Application>
 
 ## Known Issues
 
-* All MXML comments are stripped, ActionScript comments are preserved
+* Nodes with values (i.e. <fx:String>Foo</fx:String>) cause faulty conversions
 * Tabs become spaces
 * If you toss in a non-existent dinosaur, you set the MAML on fire
 * Script/Metadata tags don't align well, especially if they're heavily indented
